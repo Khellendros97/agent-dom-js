@@ -1,0 +1,100 @@
+:root {
+  font-family: Inter, Arial, sans-serif;
+  color: #1f2430;
+  background: #f7f4fb;
+}
+
+body {
+  margin: 0;
+  padding: 32px;
+}
+
+main {
+  max-width: 1040px;
+  margin: 0 auto;
+  display: grid;
+  gap: 24px;
+}
+
+section {
+  background: #fff;
+  border: 1px solid #e4dcf0;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 10px 24px rgb(83 52 124 / 8%);
+}
+
+h1,
+h2 {
+  margin-top: 0;
+}
+
+label {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+input,
+select,
+textarea,
+button {
+  font: inherit;
+}
+
+input,
+select,
+textarea,
+.editable {
+  border: 1px solid #c9b7df;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+button {
+  border: 0;
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #fff;
+  background: #6b3dc7;
+  cursor: pointer;
+}
+
+button.secondary {
+  background: #645a73;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  border-bottom: 1px solid #ebe4f3;
+  padding: 10px;
+  text-align: left;
+}
+
+.toolbar {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.status {
+  min-height: 24px;
+  color: #6b3dc7;
+  font-weight: 700;
+}
+
+.editable {
+  min-height: 48px;
+}

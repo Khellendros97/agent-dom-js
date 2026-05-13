@@ -1,0 +1,23 @@
+{
+  "name": "agent-dom-js",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "main": "dist/agent-dom-js.umd.cjs",
+  "module": "dist/agent-dom-js.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "vite build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "jsdom": "latest",
+    "typescript": "latest",
+    "vite": "latest",
+    "vite-plugin-dts": "latest",
+    "vitest": "latest"
+  }
+}

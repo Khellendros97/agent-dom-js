@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Agent DOM Static HTML Test</title>
+    <style>
+      :root {
+        font-family: Arial, sans-serif;
+        color: #172033;
+        background: #f5f7fb;
+      }
+
+      body {
+        margin: 0;
+        padding: 32px;
+      }
+
+      main {
+        max-width: 1040px;
+        margin: 0 auto;
+        display: grid;
+        gap: 24px;
+      }
+
+      section {
+        background: #fff;
+        border: 1px solid #dfe5f2;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 10px 24px rgb(28 40 68 / 8%);
+      }
+
+      h1,
+      h2 {
+        margin-top: 0;
+      }
+
+      label {
+        display: grid;
+        gap: 6px;
+        margin-bottom: 12px;
+        font-weight: 600;
+      }
+
+      input,
+      select,
+      textarea,
+      button {
+        font: inherit;
+      }
+
+      input,
+      select,
+      textarea {
+        border: 1px solid #b9c4d8;
+        border-radius: 8px;
+        padding: 10px 12px;
+      }
+
+      button {
+        border: 0;
+        border-radius: 8px;
+        padding: 10px 14px;
+        color: #fff;
+        background: #2458d3;
+        cursor: pointer;
+      }
+
+      button.secondary {
+        background: #516070;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        border-bottom: 1px solid #e5e9f2;
+        padding: 10px;
+        text-align: left;
+      }
+
+      .toolbar {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .status {
+        min-height: 24px;
+        color: #2458d3;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>原生静态 HTML 测试页</h1>
+        <p>用于验证 snapshot、click、fill、select、checkbox、表格读取等 DOM 操作能力。</p>
+      </header>
+
+      <section aria-labelledby="profile-title">
+        <h2 id="profile-title">用户资料表单</h2>
+        <form id="profile-form">
+          <label>
+            姓名
+            <input id="name" name="name" placeholder="请输入姓名" autocomplete="name" />
+          </label>
+          <label>
+            邮箱
+            <input id="email" name="email" type="email" placeholder="user@example.com" />
+          </label>
+          <label>
+            角色
+            <select id="role" name="role">
+              <option value="viewer">访客</option>
+              <option value="editor">编辑</option>
+              <option value="admin">管理员</option>
+            </select>
+          </label>
+          <label>
+            备注
+            <textarea id="notes" name="notes" rows="4" placeholder="请输入备注"></textarea>
+          </label>
+          <label>
+            <span><input id="subscribe" name="subscribe" type="checkbox" /> 接收通知</span>
+          </label>
+          <div class="toolbar">
+            <button type="submit">提交资料</button>
+            <button class="secondary" type="reset">重置</button>
+          </div>
+        </form>
+        <p id="form-status" class="status" role="status"></p>
+      </section>
+
+      <section aria-labelledby="table-title">
+        <h2 id="table-title">用户表格</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>姓名</th>
+              <th>角色</th>
+              <th>状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>张三</td>
+              <td>管理员</td>
+              <td>启用</td>
+              <td><button type="button" data-user="张三">查看</button></td>
+            </tr>
+            <tr>
+              <td>李四</td>
+              <td>编辑</td>
+              <td>停用</td>
+              <td><button type="button" data-user="李四">查看</button></td>
+            </tr>
+          </tbody>
+        </table>
+        <p id="table-status" class="status" role="status"></p>
+      </section>
+
+      <section aria-labelledby="content-title">
+        <h2 id="content-title">可编辑内容</h2>
+        <div id="editable" contenteditable="true" role="textbox" aria-label="公告内容">双击或填充这里的公告内容</div>
+      </section>
+    </main>
+
+    <script>
+      document.getElementById('profile-form').addEventListener('submit', (event) => {
+        event.preventDefault();
+        const form = new FormData(event.currentTarget);
+        document.getElementById('form-status').textContent = `已提交：${form.get('name') || '未命名'}`;
+      });
+
+      document.querySelectorAll('[data-user]').forEach((button) => {
+        button.addEventListener('click', () => {
+          document.getElementById('table-status').textContent = `正在查看：${button.dataset.user}`;
+        });
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,31 @@
+import { describe, expect, it } from 'vitest';
+import { RefRegistry } from '../src/ref-registry';
+import { createSnapshot } from '../src/snapshot';
+
+describe('createSnapshot', () => {
+  it('renders interactive elements with refs', () => {
+    document.body.innerHTML = `
+      <main>
+        <h1>测试页面</h1>
+        <button>提交</button>
+        <label for="name">姓名</label><input id="name" value="张三" />
+      </main>
+    `;
+    const registry = new RefRegistry();
+
+    const snapshot = createSnapshot(document, registry, { maskSensitiveValues: true });
+
+    expect(snapshot.text).toContain('- heading "测试页面"');
+    expect(snapshot.text).toContain('- button "提交" [ref=e1]');
+    expect(snapshot.text).toContain('- textbox "姓名" [ref=e2, value="张三"]');
+    expect(snapshot.nodes).toHaveLength(2);
+  });
+
+  it('masks sensitive input values', () => {
+    document.body.innerHTML = '<label for="password">密码</label><input id="password" type="password" value="secret" />';
+    const snapshot = createSnapshot(document, new RefRegistry(), { maskSensitiveValues: true });
+
+    expect(snapshot.text).toContain('value="[masked]"');
+    expect(snapshot.text).not.toContain('secret');
+  });
+});

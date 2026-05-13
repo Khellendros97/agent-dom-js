@@ -1,0 +1,100 @@
+:root {
+  font-family: Inter, Arial, sans-serif;
+  color: #182131;
+  background: #f3f7f4;
+}
+
+body {
+  margin: 0;
+  padding: 32px;
+}
+
+main {
+  max-width: 1040px;
+  margin: 0 auto;
+  display: grid;
+  gap: 24px;
+}
+
+section {
+  background: #fff;
+  border: 1px solid #d9e7dd;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 10px 24px rgb(26 83 49 / 8%);
+}
+
+h1,
+h2 {
+  margin-top: 0;
+}
+
+label {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+input,
+select,
+textarea,
+button {
+  font: inherit;
+}
+
+input,
+select,
+textarea,
+.editable {
+  border: 1px solid #adc9b5;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+button {
+  border: 0;
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #fff;
+  background: #14804a;
+  cursor: pointer;
+}
+
+button.secondary {
+  background: #5b6b61;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  border-bottom: 1px solid #e0ebe3;
+  padding: 10px;
+  text-align: left;
+}
+
+.toolbar {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.status {
+  min-height: 24px;
+  color: #14804a;
+  font-weight: 700;
+}
+
+.editable {
+  min-height: 48px;
+}
