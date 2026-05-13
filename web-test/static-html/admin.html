@@ -1,0 +1,655 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Agent DOM Admin Page Test</title>
+    <style>
+      :root {
+        font-family: "Segoe UI", Arial, sans-serif;
+        color: #172033;
+        background: #f0f3fa;
+        --nav-w: 240px;
+        --header-h: 56px;
+        --primary: #2458d3;
+        --danger: #d3193a;
+        --success: #14804a;
+      }
+
+      * { box-sizing: border-box; }
+
+      body { margin: 0; height: 100vh; display: flex; flex-direction: column; }
+
+      /* ═══ 顶部标题栏 ═══ */
+      .topbar {
+        height: var(--header-h);
+        background: #fff;
+        border-bottom: 1px solid #dfe5f2;
+        display: flex;
+        align-items: center;
+        padding: 0 20px;
+        gap: 16px;
+        flex-shrink: 0;
+        z-index: 10;
+        box-shadow: 0 2px 8px rgb(28 40 68 / 6%);
+      }
+
+      .topbar .toggle-btn {
+        width: 36px; height: 36px;
+        border: 1px solid #dfe5f2;
+        border-radius: 8px;
+        background: #fff;
+        cursor: pointer;
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #516070;
+      }
+
+      .topbar .brand { font-weight: 700; font-size: 16px; color: var(--primary); }
+      .topbar .spacer { flex: 1; }
+      .topbar .user-info { font-size: 13px; color: #516070; }
+
+      /* ═══ 主体 ═══ */
+      .layout { display: flex; flex: 1; overflow: hidden; }
+
+      /* ═══ 左侧导航 ═══ */
+      .sidenav {
+        width: var(--nav-w);
+        flex-shrink: 0;
+        background: #fff;
+        border-right: 1px solid #dfe5f2;
+        padding: 12px 0;
+        transition: width 0.2s, padding 0.2s;
+        overflow: hidden;
+      }
+
+      .sidenav.collapsed { width: 60px; }
+
+      .sidenav .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 20px;
+        cursor: pointer;
+        font-size: 14px;
+        color: #516070;
+        border-left: 3px solid transparent;
+        white-space: nowrap;
+      }
+
+      .sidenav .nav-item:hover { background: #f5f7fb; }
+      .sidenav .nav-item.active {
+        color: var(--primary);
+        background: #ecf0fe;
+        border-left-color: var(--primary);
+        font-weight: 600;
+      }
+
+      .sidenav .nav-item .icon { font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
+      .sidenav.collapsed .nav-item { padding: 10px 18px; justify-content: center; }
+      .sidenav.collapsed .nav-item .label { display: none; }
+
+      .sidenav .nav-section {
+        font-size: 11px;
+        color: #8895ae;
+        padding: 16px 20px 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .sidenav.collapsed .nav-section { display: none; }
+
+      /* ═══ 右侧操作栏 ═══ */
+      .sidenav .op-panel {
+        margin-top: auto;
+        padding: 12px 20px;
+        border-top: 1px solid #dfe5f2;
+      }
+      .sidenav.collapsed .op-panel { padding: 12px 10px; text-align: center; }
+
+      .sidenav .op-panel button {
+        font-size: 12px;
+        padding: 6px 10px;
+        background: var(--primary);
+        color: #fff;
+        border: 0;
+        border-radius: 6px;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .sidenav.collapsed .op-panel button { font-size: 16px; padding: 6px 8px; }
+
+      /* ═══ 主内容 ═══ */
+      .main-content {
+        flex: 1;
+        overflow: auto;
+        padding: 24px 32px;
+        display: grid;
+        gap: 20px;
+        align-content: start;
+      }
+
+      .page-header { display: flex; justify-content: space-between; align-items: center; }
+      .page-header h1 { margin: 0; font-size: 22px; }
+
+      /* ═══ 工具栏 ═══ */
+      .toolbar-row {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .toolbar-row input {
+        flex: 1;
+        min-width: 200px;
+        max-width: 320px;
+      }
+
+      .btn {
+        border: 0;
+        border-radius: 8px;
+        padding: 8px 16px;
+        font: inherit;
+        font-size: 13px;
+        cursor: pointer;
+        color: #fff;
+      }
+
+      .btn-primary { background: var(--primary); }
+      .btn-primary:hover { background: #1c44b3; }
+      .btn-secondary { background: #516070; }
+      .btn-danger { background: var(--danger); }
+      .btn-sm { padding: 4px 10px; font-size: 12px; }
+
+      input, select, textarea {
+        border: 1px solid #b9c4d8;
+        border-radius: 8px;
+        padding: 8px 12px;
+        font: inherit;
+        font-size: 13px;
+      }
+
+      /* ═══ 表格 ═══ */
+      .card {
+        background: #fff;
+        border: 1px solid #dfe5f2;
+        border-radius: 12px;
+        box-shadow: 0 8px 20px rgb(28 40 68 / 5%);
+        overflow: hidden;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th {
+        background: #f5f7fb;
+        text-align: left;
+        padding: 12px 16px;
+        font-size: 12px;
+        color: #516070;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        border-bottom: 1px solid #dfe5f2;
+      }
+
+      td {
+        padding: 12px 16px;
+        border-bottom: 1px solid #f0f3fa;
+        font-size: 14px;
+      }
+
+      tr:last-child td { border-bottom: 0; }
+
+      .badge {
+        display: inline-block;
+        padding: 2px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .badge-active { background: #e3f5e8; color: var(--success); }
+      .badge-inactive { background: #fde8ec; color: var(--danger); }
+      .badge-pending { background: #fff3db; color: #b05b0a; }
+
+      /* ═══ Modal ═══ */
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgb(0 0 0 / 40%);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+      }
+
+      .modal-overlay.open { display: flex; }
+
+      .modal {
+        background: #fff;
+        border-radius: 16px;
+        padding: 28px;
+        width: 520px;
+        max-height: 85vh;
+        overflow: auto;
+        box-shadow: 0 20px 48px rgb(28 40 68 / 20%);
+      }
+
+      .modal h2 { margin: 0 0 20px; }
+
+      .modal label {
+        display: grid;
+        gap: 4px;
+        margin-bottom: 14px;
+        font-weight: 600;
+        font-size: 13px;
+      }
+
+      .modal .inline {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .modal .actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 8px;
+      }
+
+      .form-error {
+        font-size: 12px;
+        color: var(--danger);
+        min-height: 18px;
+        margin-top: 2px;
+      }
+
+      /* ═══ Agent DOM 侧边栏 ═══ */
+      .agent-sidebar {
+        width: 380px;
+        flex-shrink: 0;
+        background: #fff;
+        border-left: 1px solid #dfe5f2;
+        display: flex;
+        flex-direction: column;
+        box-shadow: -4px 0 20px rgb(28 40 68 / 6%);
+        font-size: 13px;
+      }
+
+      .agent-sidebar .sb-header {
+        padding: 12px 16px;
+        border-bottom: 1px solid #dfe5f2;
+        font-weight: 700;
+        color: var(--primary);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .agent-sidebar .sb-header button {
+        font-size: 11px;
+        padding: 4px 10px;
+        background: #f0f3fa;
+        color: var(--primary);
+        border: 1px solid #dfe5f2;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+
+      .agent-sidebar .snap-tree {
+        flex: 1;
+        overflow: auto;
+        padding: 10px 16px;
+        font-family: "Cascadia Code", Consolas, monospace;
+        font-size: 12px;
+        line-height: 1.55;
+        white-space: pre-wrap;
+        word-break: break-all;
+        color: #1a1f2e;
+        background: #fafbff;
+        margin: 0;
+      }
+
+      .agent-sidebar .ctrl {
+        border-top: 1px solid #dfe5f2;
+        padding: 10px 16px;
+        display: grid;
+        gap: 8px;
+      }
+
+      .agent-sidebar .ctrl label { font-size: 11px; gap: 3px; margin-bottom: 0; }
+      .agent-sidebar .ctrl .row { display: flex; gap: 6px; }
+      .agent-sidebar .ctrl input,
+      .agent-sidebar .ctrl select { padding: 6px 8px; border-radius: 6px; font-size: 13px; }
+      .agent-sidebar .ctrl .row input { flex: 1; }
+      .agent-sidebar .ctrl .exec-btn { background: var(--success); color: #fff; width: 100%; font-size: 13px; }
+      .agent-sidebar .log { font-size: 11px; color: #516070; min-height: 16px; max-height: 48px; overflow: auto; background: #fafbff; border-radius: 6px; padding: 4px 8px; }
+      .agent-sidebar .log .error { color: var(--danger); }
+      .agent-sidebar .log .success { color: var(--success); }
+    </style>
+  </head>
+  <body>
+    <!-- ═══ 标题栏 ═══ -->
+    <header class="topbar">
+      <button class="toggle-btn" onclick="toggleNav()" title="折叠导航">☰</button>
+      <span class="brand">管理后台</span>
+      <span class="spacer"></span>
+      <span class="user-info">管理员：admin@example.com</span>
+    </header>
+
+    <!-- ═══ 布局 ═══ -->
+    <div class="layout">
+      <!-- ═══ 左侧导航 ═══ -->
+      <nav class="sidenav" id="sidenav">
+        <div class="nav-item active" data-page="users">
+          <span class="icon">👥</span><span class="label">用户管理</span>
+        </div>
+        <div class="nav-item">
+          <span class="icon">📊</span><span class="label">数据看板</span>
+        </div>
+        <div class="nav-item">
+          <span class="icon">📝</span><span class="label">内容管理</span>
+        </div>
+        <div class="nav-section">系统</div>
+        <div class="nav-item">
+          <span class="icon">⚙</span><span class="label">系统设置</span>
+        </div>
+        <div class="nav-item">
+          <span class="icon">📋</span><span class="label">操作日志</span>
+        </div>
+      </nav>
+
+      <!-- ═══ 主内容 ═══ -->
+      <main class="main-content" id="main-content">
+        <div class="page-header">
+          <h1>用户管理</h1>
+        </div>
+
+        <!-- 工具栏 -->
+        <div class="toolbar-row">
+          <input id="search-input" type="text" placeholder="搜索姓名、邮箱或角色..." oninput="renderTable()" />
+          <select id="status-filter" onchange="renderTable()">
+            <option value="">全部状态</option>
+            <option value="启用">启用</option>
+            <option value="停用">停用</option>
+            <option value="待审核">待审核</option>
+          </select>
+          <button class="btn btn-primary" onclick="openModal()">+ 添加用户</button>
+        </div>
+
+        <!-- 表格 -->
+        <div class="card">
+          <table id="user-table">
+            <thead>
+              <tr>
+                <th>姓名</th>
+                <th>邮箱</th>
+                <th>角色</th>
+                <th>状态</th>
+                <th style="width:160px">操作</th>
+              </tr>
+            </thead>
+            <tbody id="user-tbody"></tbody>
+          </table>
+        </div>
+
+        <p id="table-status" role="status" style="font-size:13px;color:var(--primary)"></p>
+      </main>
+
+      <!-- ═══ Agent DOM 侧边栏 ═══ -->
+      <aside class="agent-sidebar">
+        <div class="sb-header">
+          <span>Agent DOM</span>
+          <button onclick="refreshSnapshot()">刷新</button>
+        </div>
+        <pre class="snap-tree" id="snap-tree">等待 snapshot()...</pre>
+        <div class="ctrl">
+          <label>目标（ref 或 CSS selector）<input id="ctrl-target" placeholder="@e1" /></label>
+          <div class="row">
+            <label style="flex:1">操作 <select id="ctrl-action"><option>snapshot</option><option>click</option><option>fill</option><option>focus</option><option>getText</option><option>isVisible</option></select></label>
+            <label id="ctrl-val-grp" style="display:none;flex:1">填充值 <input id="ctrl-value" placeholder="值" /></label>
+          </div>
+          <button class="btn exec-btn" onclick="executeAction()">执行</button>
+          <div class="log" id="action-log"></div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- ═══ 添加/编辑 Modal ═══ -->
+    <div class="modal-overlay" id="modal-overlay">
+      <div class="modal" role="dialog" aria-labelledby="modal-title">
+        <h2 id="modal-title">添加用户</h2>
+        <form id="user-form" novalidate>
+          <label>
+            姓名
+            <input id="form-name" name="name" required placeholder="请输入姓名" autocomplete="name" />
+            <span class="form-error" id="err-name"></span>
+          </label>
+          <label>
+            邮箱
+            <input id="form-email" name="email" type="email" required placeholder="user@example.com" autocomplete="email" />
+            <span class="form-error" id="err-email"></span>
+          </label>
+          <label>
+            角色
+            <select id="form-role" name="role" required>
+              <option value="">请选择角色</option>
+              <option value="管理员">管理员</option>
+              <option value="编辑">编辑</option>
+              <option value="访客">访客</option>
+            </select>
+            <span class="form-error" id="err-role"></span>
+          </label>
+          <label>
+            备注
+            <textarea id="form-notes" name="notes" rows="3" placeholder="可选备注"></textarea>
+          </label>
+          <label class="inline">
+            <input id="form-active" name="status" type="checkbox" /> 启用账号
+          </label>
+          <div class="actions">
+            <button type="button" class="btn btn-secondary" onclick="closeModal()">取消</button>
+            <button type="submit" class="btn btn-primary" id="submit-btn">保存</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      // ── 用户数据 ──
+      let users = [
+        { id: 1, name: '张伟', email: 'zhangwei@example.com', role: '管理员', status: '启用' },
+        { id: 2, name: '李娜', email: 'lina@example.com', role: '编辑', status: '启用' },
+        { id: 3, name: '王磊', email: 'wanglei@example.com', role: '编辑', status: '待审核' },
+        { id: 4, name: '赵敏', email: 'zhaomin@example.com', role: '访客', status: '停用' },
+        { id: 5, name: '陈强', email: 'chenqiang@example.com', role: '访客', status: '启用' },
+      ];
+      let nextId = 6;
+      let editingId = null;
+
+      // ── 导航折叠 ──
+      window.toggleNav = () => document.getElementById('sidenav').classList.toggle('collapsed');
+
+      // ── 渲染表格 ──
+      window.renderTable = () => {
+        const search = (document.getElementById('search-input').value || '').toLowerCase();
+        const status = document.getElementById('status-filter').value;
+        const filtered = users.filter(u =>
+          (!search || u.name.toLowerCase().includes(search) || u.email.toLowerCase().includes(search) || u.role.includes(search)) &&
+          (!status || u.status === status)
+        );
+        const tbody = document.getElementById('user-tbody');
+        tbody.innerHTML = filtered.map(u => `
+          <tr>
+            <td>${u.name}</td>
+            <td>${u.email}</td>
+            <td>${u.role}</td>
+            <td><span class="badge ${statusClass(u.status)}">${u.status}</span></td>
+            <td>
+              <button class="btn btn-primary btn-sm" onclick="openModal(${u.id})">编辑</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteUser(${u.id})">删除</button>
+            </td>
+          </tr>
+        `).join('');
+        document.getElementById('table-status').textContent = `共 ${filtered.length} 条记录`;
+      };
+
+      function statusClass(s) {
+        if (s === '启用') return 'badge-active';
+        if (s === '停用') return 'badge-inactive';
+        return 'badge-pending';
+      }
+
+      // ── Modal ──
+      window.openModal = (id) => {
+        clearErrors();
+        if (id) {
+          const u = users.find(u => u.id === id);
+          if (!u) return;
+          editingId = id;
+          document.getElementById('modal-title').textContent = '编辑用户';
+          document.getElementById('form-name').value = u.name;
+          document.getElementById('form-email').value = u.email;
+          document.getElementById('form-role').value = u.role;
+          document.getElementById('form-notes').value = u.notes || '';
+          document.getElementById('form-active').checked = u.status === '启用';
+          document.getElementById('submit-btn').textContent = '保存修改';
+        } else {
+          editingId = null;
+          document.getElementById('modal-title').textContent = '添加用户';
+          document.getElementById('user-form').reset();
+          document.getElementById('submit-btn').textContent = '保存';
+        }
+        document.getElementById('modal-overlay').classList.add('open');
+      };
+
+      window.closeModal = () => {
+        document.getElementById('modal-overlay').classList.remove('open');
+        clearErrors();
+      };
+
+      // ── 删除 ──
+      window.deleteUser = (id) => {
+        users = users.filter(u => u.id !== id);
+        renderTable();
+      };
+
+      function clearErrors() {
+        document.querySelectorAll('.form-error').forEach(el => el.textContent = '');
+      }
+
+      // ── 表单提交 ──
+      document.getElementById('user-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = document.getElementById('form-name');
+        const email = document.getElementById('form-email');
+        const role = document.getElementById('form-role');
+
+        let valid = true;
+        clearErrors();
+
+        if (!name.value.trim()) {
+          document.getElementById('err-name').textContent = '请输入姓名';
+          name.setCustomValidity('请输入姓名');
+          valid = false;
+        } else {
+          name.setCustomValidity('');
+        }
+
+        if (!email.value.trim()) {
+          document.getElementById('err-email').textContent = '请输入邮箱';
+          email.setCustomValidity('请输入邮箱');
+          valid = false;
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
+          document.getElementById('err-email').textContent = '邮箱格式不正确';
+          email.setCustomValidity('邮箱格式不正确');
+          valid = false;
+        } else {
+          email.setCustomValidity('');
+        }
+
+        if (!role.value) {
+          document.getElementById('err-role').textContent = '请选择角色';
+          role.setCustomValidity('请选择角色');
+          valid = false;
+        } else {
+          role.setCustomValidity('');
+        }
+
+        if (!valid) {
+          // Report validity so snapshot captures validation messages
+          name.reportValidity();
+          email.reportValidity();
+          role.reportValidity();
+          return;
+        }
+
+        const data = {
+          id: editingId || nextId++,
+          name: name.value.trim(),
+          email: email.value.trim(),
+          role: role.value,
+          notes: document.getElementById('form-notes').value,
+          status: document.getElementById('form-active').checked ? '启用' : '停用',
+        };
+
+        if (editingId) {
+          users = users.map(u => u.id === editingId ? data : u);
+        } else {
+          users.push(data);
+        }
+
+        closeModal();
+        renderTable();
+      });
+
+      // ── 初始渲染 ──
+      renderTable();
+    </script>
+
+    <script type="module">
+      import { createAgentDom } from '../../dist/agent-dom-js.js';
+
+      const agentDom = createAgentDom();
+
+      window.refreshSnapshot = () => {
+        const result = agentDom.snapshot();
+        const el = document.getElementById('snap-tree');
+        el.textContent = result.ok ? result.data.text : `[error] ${result.error}`;
+      };
+
+      window.executeAction = async () => {
+        const target = document.getElementById('ctrl-target').value.trim();
+        const action = document.getElementById('ctrl-action').value;
+        const value = document.getElementById('ctrl-value').value;
+        const log = document.getElementById('action-log');
+
+        if (!target) { log.innerHTML = '<span class="error">请输入目标</span>'; return; }
+
+        let result;
+        switch (action) {
+          case 'snapshot': refreshSnapshot(); return;
+          case 'click': result = await agentDom.click(target); break;
+          case 'fill': result = await agentDom.fill(target, value); break;
+          case 'focus': result = await agentDom.focus(target); break;
+          case 'getText': result = agentDom.getText(target); break;
+          case 'isVisible': result = agentDom.isVisible(target); break;
+        }
+        log.innerHTML = result.ok
+          ? `<span class="success">[${action}] 成功</span>`
+          : `<span class="error">[${action}] ${result.code}: ${result.error}</span>`;
+        setTimeout(refreshSnapshot, 150);
+      };
+
+      document.getElementById('ctrl-action').addEventListener('change', (e) => {
+        document.getElementById('ctrl-val-grp').style.display = e.target.value === 'fill' ? '' : 'none';
+      });
+
+      refreshSnapshot();
+    </script>
+  </body>
+</html>
