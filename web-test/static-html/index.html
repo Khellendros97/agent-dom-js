@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Agent DOM Static HTML Test</title>
+    <title>Agent DOM Integration Test</title>
     <style>
       :root {
         font-family: Arial, sans-serif;
@@ -11,16 +11,22 @@
         background: #f5f7fb;
       }
 
+      * { box-sizing: border-box; }
+
       body {
         margin: 0;
-        padding: 32px;
+        display: flex;
+        min-height: 100vh;
       }
 
+      /* ── 主内容区 ── */
       main {
-        max-width: 1040px;
-        margin: 0 auto;
+        flex: 1;
+        min-width: 0;
+        padding: 32px;
         display: grid;
         gap: 24px;
+        align-content: start;
       }
 
       section {
@@ -31,10 +37,7 @@
         box-shadow: 0 10px 24px rgb(28 40 68 / 8%);
       }
 
-      h1,
-      h2 {
-        margin-top: 0;
-      }
+      h1, h2 { margin-top: 0; }
 
       label {
         display: grid;
@@ -43,16 +46,9 @@
         font-weight: 600;
       }
 
-      input,
-      select,
-      textarea,
-      button {
-        font: inherit;
-      }
+      input, select, textarea, button { font: inherit; }
 
-      input,
-      select,
-      textarea {
+      input, select, textarea {
         border: 1px solid #b9c4d8;
         border-radius: 8px;
         padding: 10px 12px;
@@ -67,40 +63,132 @@
         cursor: pointer;
       }
 
-      button.secondary {
-        background: #516070;
-      }
+      button.secondary { background: #516070; }
 
       table {
         width: 100%;
         border-collapse: collapse;
       }
 
-      th,
-      td {
+      th, td {
         border-bottom: 1px solid #e5e9f2;
         padding: 10px;
         text-align: left;
       }
 
-      .toolbar {
-        display: flex;
-        gap: 12px;
-        flex-wrap: wrap;
-      }
+      .toolbar { display: flex; gap: 12px; flex-wrap: wrap; }
 
       .status {
         min-height: 24px;
         color: #2458d3;
         font-weight: 700;
       }
+
+      /* ── 侧边栏 ── */
+      aside {
+        width: 400px;
+        flex-shrink: 0;
+        background: #fff;
+        border-left: 1px solid #dfe5f2;
+        display: flex;
+        flex-direction: column;
+        box-shadow: -4px 0 20px rgb(28 40 68 / 6%);
+      }
+
+      .sidebar-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid #e5e9f2;
+        font-weight: 700;
+        font-size: 15px;
+        color: #2458d3;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .sidebar-header button {
+        font-size: 12px;
+        padding: 6px 10px;
+        background: #e5e9f2;
+        color: #2458d3;
+      }
+
+      .snapshot-tree {
+        flex: 1;
+        overflow: auto;
+        padding: 12px 20px;
+        font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+        font-size: 13px;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        word-break: break-all;
+        color: #1a1f2e;
+        background: #fafbff;
+        margin: 0;
+      }
+
+      .snapshot-tree .heading { color: #7c3aed; font-weight: 700; }
+      .snapshot-tree .ref { color: #2458d3; }
+      .snapshot-tree .attr { color: #516070; }
+      .snapshot-tree .name { color: #1a1f2e; font-style: italic; }
+
+      /* ── 操作面板 ── */
+      .control-panel {
+        border-top: 1px solid #e5e9f2;
+        padding: 16px 20px;
+        display: grid;
+        gap: 10px;
+      }
+
+      .control-panel label {
+        font-size: 12px;
+        gap: 4px;
+        margin-bottom: 0;
+      }
+
+      .control-panel .row {
+        display: flex;
+        gap: 8px;
+      }
+
+      .control-panel input,
+      .control-panel select {
+        padding: 8px 10px;
+        border: 1px solid #b9c4d8;
+        border-radius: 6px;
+        font-size: 14px;
+      }
+
+      .control-panel .row input { flex: 1; }
+
+      .control-panel .exec-btn {
+        background: #14804a;
+        width: 100%;
+      }
+
+      .control-panel .exec-btn:hover { background: #0f6b3d; }
+
+      .control-panel .action-log {
+        font-size: 12px;
+        color: #516070;
+        min-height: 18px;
+        max-height: 60px;
+        overflow: auto;
+        background: #fafbff;
+        border-radius: 6px;
+        padding: 6px 8px;
+      }
+
+      .action-log .error { color: #d3193a; }
+      .action-log .success { color: #14804a; }
     </style>
   </head>
   <body>
+    <!-- ══ 主内容区 ══ -->
     <main>
       <header>
-        <h1>原生静态 HTML 测试页</h1>
-        <p>用于验证 snapshot、click、fill、select、checkbox、表格读取等 DOM 操作能力。</p>
+        <h1>Agent DOM Integration Test</h1>
+        <p>右侧为 Agent DOM 快照树与操作面板。使用 ref（如 @e1）或 CSS selector 操作页面元素。</p>
       </header>
 
       <section aria-labelledby="profile-title">
@@ -172,6 +260,133 @@
       </section>
     </main>
 
+    <!-- ══ 侧边栏 ══ -->
+    <aside>
+      <div class="sidebar-header">
+        <span>DOM 快照树</span>
+        <button onclick="refreshSnapshot()" title="刷新快照">刷新</button>
+      </div>
+      <pre class="snapshot-tree" id="snapshot-tree">等待 snapshot()...</pre>
+
+      <div class="control-panel">
+        <label>
+          目标 (ref 或 CSS selector)
+          <input id="ctrl-target" placeholder="@e1" />
+        </label>
+        <div class="row">
+          <label style="flex:1">
+            操作
+            <select id="ctrl-action">
+              <option value="snapshot">snapshot</option>
+              <option value="click">click</option>
+              <option value="fill">fill</option>
+              <option value="focus">focus</option>
+              <option value="getText">getText</option>
+              <option value="isVisible">isVisible</option>
+            </select>
+          </label>
+          <label id="ctrl-value-group" style="display:none;flex:1">
+            填充值
+            <input id="ctrl-value" placeholder="填入的值" />
+          </label>
+        </div>
+        <button class="exec-btn" onclick="executeAction()">执行</button>
+        <div class="action-log" id="action-log"></div>
+      </div>
+    </aside>
+
+    <!-- ══ 脚本 ══ -->
+    <script type="module">
+      import { createAgentDom } from '../../dist/agent-dom-js.js';
+
+      const agentDom = createAgentDom();
+
+      // ── 刷新快照 ──
+      window.refreshSnapshot = () => {
+        const result = agentDom.snapshot();
+        const treeEl = document.getElementById('snapshot-tree');
+        if (result.ok) {
+          treeEl.textContent = result.data.text;
+          log('snapshot 完成');
+        } else {
+          treeEl.textContent = `[snapshot failed] ${result.error}`;
+          log(result.error, 'error');
+        }
+      };
+
+      // ── 执行动作 ──
+      window.executeAction = async () => {
+        const target = document.getElementById('ctrl-target').value.trim();
+        const action = document.getElementById('ctrl-action').value;
+        const value = document.getElementById('ctrl-value').value;
+
+        if (!target) {
+          log('请输入目标', 'error');
+          return;
+        }
+
+        let result;
+        switch (action) {
+          case 'snapshot':
+            refreshSnapshot();
+            return;
+          case 'click':
+            result = await agentDom.click(target);
+            break;
+          case 'fill':
+            result = await agentDom.fill(target, value);
+            break;
+          case 'focus':
+            result = await agentDom.focus(target);
+            break;
+          case 'getText':
+            result = agentDom.getText(target);
+            break;
+          case 'isVisible':
+            result = agentDom.isVisible(target);
+            break;
+          default:
+            log(`未知操作: ${action}`, 'error');
+            return;
+        }
+
+        if (result.ok) {
+          log(`[${action}] ${target} 执行成功`, 'success');
+        } else {
+          log(`[${action}] ${result.code}: ${result.error}`, 'error');
+        }
+
+        // 操作后自动刷新快照
+        setTimeout(refreshSnapshot, 100);
+      };
+
+      // ── UI 联动：fill 操作时显示填充值输入框 ──
+      document.getElementById('ctrl-action').addEventListener('change', (event) => {
+        document.getElementById('ctrl-value-group').style.display =
+          event.target.value === 'fill' ? '' : 'none';
+      });
+
+      // ── 日志 ──
+      function log(msg, type = '') {
+        const logEl = document.getElementById('action-log');
+        const span = document.createElement('span');
+        span.className = type;
+        span.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+        logEl.prepend(span);
+        logEl.appendChild(document.createElement('br'));
+        if (logEl.children.length > 24) {
+          while (logEl.children.length > 20) {
+            logEl.removeChild(logEl.lastElementChild);
+            if (logEl.lastElementChild?.tagName === 'BR') logEl.removeChild(logEl.lastElementChild);
+          }
+        }
+      }
+
+      // ── 初始快照 ──
+      refreshSnapshot();
+    </script>
+
+    <!-- ══ 原始事件脚本（非模块，保持功能） ══ -->
     <script>
       document.getElementById('profile-form').addEventListener('submit', (event) => {
         event.preventDefault();
