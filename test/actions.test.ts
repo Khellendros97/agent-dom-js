@@ -46,4 +46,26 @@ describe('actions', () => {
     expect(result.ok).toBe(true);
     expect(document.activeElement).toBe(input);
   });
+
+  it('fills select by option value', async () => {
+    const select = document.createElement('select');
+    select.innerHTML = '<option value="a">选项A</option><option value="b">选项B</option>';
+    document.body.append(select);
+
+    const result = await fillElement(select, 'b', 'select');
+
+    expect(result.ok).toBe(true);
+    expect(select.value).toBe('b');
+  });
+
+  it('fills select by option text fallback', async () => {
+    const select = document.createElement('select');
+    select.innerHTML = '<option value="1">管理员</option><option value="2">访客</option>';
+    document.body.append(select);
+
+    const result = await fillElement(select, '访客', 'select');
+
+    expect(result.ok).toBe(true);
+    expect(select.value).toBe('2');
+  });
 });

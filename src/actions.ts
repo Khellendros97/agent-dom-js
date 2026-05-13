@@ -20,7 +20,12 @@ export async function clickElement(element: Element, target: string): Promise<Ag
   try {
     element.scrollIntoView({ block: 'center', inline: 'center' });
     element.focus();
-    element.click();
+
+    if (element instanceof HTMLSelectElement && 'showPicker' in HTMLSelectElement.prototype) {
+      element.showPicker();
+    } else {
+      element.click();
+    }
   } catch (error) {
     return failure('ACTION_FAILED', `Click failed on: ${target}`, error);
   }
@@ -68,6 +73,12 @@ export async function fillElement(
       return success({ target });
     }
 
+    if (element instanceof HTMLSelectElement) {
+      selectOption(element, value);
+      element.dispatchEvent(new Event('change', { bubbles: true }));
+      return success({ target });
+    }
+
     if (element.isContentEditable) {
       element.textContent = value;
       element.dispatchEvent(newEvent('input', { bubbles: true, inputType: 'insertText', data: value }));
@@ -97,4 +108,29 @@ function setNativeValue(element: HTMLInputElement | HTMLTextAreaElement, value: 
   const prototype = Object.getPrototypeOf(element);
   const descriptor = Object.getOwnPropertyDescriptor(prototype, 'value');
   descriptor?.set?.call(element, value);
+}
+
+function selectOption(select: HTMLSelectElement, value: string): void {
+  // Try matching by option value first
+  for (const opt of Array.from(select.options)) {
+    if (opt.value === value) {
+      select.value = opt.value;
+      return;
+    }
+  }
+  // Fall back to matching by option text (case-insensitive)
+  const lowerValue = value.toLowerCase();
+  for (const opt of Array.from(select.options)) {
+    if ((opt.textContent ?? '').trim().toLowerCase() === lowerValue) {
+      select.value = opt.value;
+      return;
+    }
+  }
+  // Partial match
+  for (const opt of Array.from(select.options)) {
+    if ((opt.textContent ?? '').toLowerCase().includes(lowerValue)) {
+      select.value = opt.value;
+      return;
+    }
+  }
 }
