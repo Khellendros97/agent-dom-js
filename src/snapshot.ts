@@ -3,7 +3,10 @@ import { isAllowedByPolicy } from './policy';
 import type { RefRegistry } from './ref-registry';
 import type { AgentDomOptions, SnapshotNode, SnapshotResult } from './types';
 
-const INTERACTIVE_SELECTOR = [
+const SNAPSHOT_SELECTOR = [
+  'h1', 'h2', 'h3',
+  'table',
+  'ul', 'ol',
   'button',
   'a[href]',
   'input',
@@ -26,14 +29,53 @@ export function createSnapshot(
   const nodes: SnapshotNode[] = [];
   const scope = root instanceof Document ? root.body : root;
 
-  collectHeadings(scope, lines, options);
-  collectTables(scope, lines, options);
-  collectLists(scope, lines, options);
-
-  scope.querySelectorAll(INTERACTIVE_SELECTOR).forEach((element) => {
+  scope.querySelectorAll(SNAPSHOT_SELECTOR).forEach((element) => {
     if (!isElementVisible(element)) return;
     if (!isAllowedByPolicy(element, options)) return;
 
+    const tag = element.tagName.toLowerCase();
+
+    if (tag === 'h1' || tag === 'h2' || tag === 'h3') {
+      const name = element.textContent?.replace(/\s+/g, ' ').trim();
+      if (name) lines.push(`- heading "${escapeText(name)}"`);
+      return;
+    }
+
+    if (tag === 'table') {
+      const rows = element.querySelectorAll('tr');
+      const headerCells = rows[0]?.querySelectorAll('th');
+      const headerTexts = headerCells?.length
+        ? Array.from(headerCells).map((th) => th.textContent?.trim() ?? '')
+        : null;
+
+      const bodyRows: string[] = [];
+      let rowCount = 0;
+      rows.forEach((row, idx) => {
+        if (headerTexts && idx === 0 && row.querySelector('th')) return;
+        const cells = row.querySelectorAll('td');
+        if (!cells.length) return;
+        rowCount++;
+        bodyRows.push(`  | ${Array.from(cells).map((td) => td.textContent?.trim() ?? '').join(' | ')} |`);
+      });
+
+      const header = headerTexts ? `\n  | ${headerTexts.join(' | ')} |` : '';
+      lines.push(`- table [${rowCount} rows]${header}${bodyRows.length ? '\n' + bodyRows.join('\n') : ''}`);
+      return;
+    }
+
+    if (tag === 'ul' || tag === 'ol') {
+      const items: string[] = [];
+      element.querySelectorAll(':scope > li').forEach((li) => {
+        const text = li.textContent?.replace(/\s+/g, ' ').trim();
+        if (text) items.push(text);
+      });
+      if (items.length) {
+        lines.push(`- ${tag} [${items.length} items]${items.map((t) => `\n  - "${escapeText(t)}"`).join('')}`);
+      }
+      return;
+    }
+
+    // Interactive element
     const ref = registry.register(element);
     const node = describeElement(element, ref, options.maskSensitiveValues ?? true);
     nodes.push(node);
@@ -41,76 +83,6 @@ export function createSnapshot(
   });
 
   return { text: lines.join('\n'), nodes };
-}
-
-function collectHeadings(
-  root: ParentNode,
-  lines: string[],
-  options: Pick<AgentDomOptions, 'allowSelectors' | 'denySelectors'>,
-): void {
-  root.querySelectorAll('h1,h2,h3').forEach((heading) => {
-    if (!isElementVisible(heading)) return;
-    if (!isAllowedByPolicy(heading, options)) return;
-    const name = heading.textContent?.replace(/\s+/g, ' ').trim();
-    if (name) lines.push(`- heading "${escapeText(name)}"`);
-  });
-}
-
-function collectTables(
-  root: ParentNode,
-  lines: string[],
-  options: Pick<AgentDomOptions, 'allowSelectors' | 'denySelectors'>,
-): void {
-  root.querySelectorAll('table').forEach((table) => {
-    if (!isElementVisible(table)) return;
-    if (!isAllowedByPolicy(table, options)) return;
-
-    const caption = table.querySelector('caption')?.textContent?.trim();
-    const rows = table.querySelectorAll('tr');
-    const headerCells = rows[0]?.querySelectorAll('th');
-    const headerTexts = headerCells?.length
-      ? Array.from(headerCells).map((th) => th.textContent?.trim() ?? '')
-      : null;
-
-    const bodyRows: string[] = [];
-    let rowCount = 0;
-    rows.forEach((row, idx) => {
-      if (headerTexts && idx === 0 && row.querySelector('th')) return; // skip header row
-      const cells = row.querySelectorAll('td');
-      if (!cells.length) return;
-      rowCount++;
-      const values = Array.from(cells).map((td) => td.textContent?.trim() ?? '');
-      bodyRows.push(`  | ${values.join(' | ')} |`);
-    });
-
-    const label = caption || (table.closest('[aria-labelledby]')
-      ? document.getElementById(table.closest('[aria-labelledby]')!.getAttribute('aria-labelledby')!)?.textContent?.trim()
-      : '') || '';
-    const header = headerTexts ? `\n  | ${headerTexts.join(' | ')} |` : '';
-    lines.push(`- table${label ? ` "${escapeText(label)}"` : ''} [${rowCount} rows]${header}${bodyRows.length ? '\n' + bodyRows.join('\n') : ''}`);
-  });
-}
-
-function collectLists(
-  root: ParentNode,
-  lines: string[],
-  options: Pick<AgentDomOptions, 'allowSelectors' | 'denySelectors'>,
-): void {
-  root.querySelectorAll('ul,ol').forEach((list) => {
-    if (!isElementVisible(list)) return;
-    if (!isAllowedByPolicy(list, options)) return;
-
-    const items: string[] = [];
-    list.querySelectorAll(':scope > li').forEach((li) => {
-      const text = li.textContent?.replace(/\s+/g, ' ').trim();
-      if (text) items.push(text);
-    });
-
-    if (items.length) {
-      const tag = list.tagName.toLowerCase();
-      lines.push(`- ${tag} [${items.length} items]${items.map((t) => `\n  - "${escapeText(t)}"`).join('')}`);
-    }
-  });
 }
 
 function describeElement(element: Element, ref: string, maskSensitiveValues: boolean): SnapshotNode {
