@@ -45,4 +45,31 @@ describe('createSnapshot', () => {
     expect(snapshot.text).toContain('可见标题');
     expect(snapshot.text).not.toContain('敏感标题');
   });
+
+  it('collects table rows', () => {
+    document.body.innerHTML = `
+      <table>
+        <thead><tr><th>名称</th><th>数量</th></tr></thead>
+        <tbody>
+          <tr><td>苹果</td><td>3</td></tr>
+          <tr><td>香蕉</td><td>5</td></tr>
+        </tbody>
+      </table>
+    `;
+    const snapshot = createSnapshot(document, new RefRegistry(), {});
+
+    expect(snapshot.text).toContain('- table [2 rows]');
+    expect(snapshot.text).toContain('| 名称 | 数量 |');
+    expect(snapshot.text).toContain('| 苹果 | 3 |');
+    expect(snapshot.text).toContain('| 香蕉 | 5 |');
+  });
+
+  it('collects list items', () => {
+    document.body.innerHTML = '<ul><li>选项A</li><li>选项B</li></ul>';
+    const snapshot = createSnapshot(document, new RefRegistry(), {});
+
+    expect(snapshot.text).toContain('- ul [2 items]');
+    expect(snapshot.text).toContain('"选项A"');
+    expect(snapshot.text).toContain('"选项B"');
+  });
 });
