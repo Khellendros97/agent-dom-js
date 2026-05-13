@@ -30,6 +30,8 @@ export interface SnapshotNode {
   value?: string;
   href?: string;
   options?: string[];
+  required?: boolean;
+  validationMessage?: string;
   disabled?: boolean;
   checked?: boolean;
 }

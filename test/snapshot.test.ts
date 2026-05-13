@@ -72,4 +72,29 @@ describe('createSnapshot', () => {
     expect(snapshot.text).toContain('"选项A"');
     expect(snapshot.text).toContain('"选项B"');
   });
+
+  it('captures validation errors on invalid fields', () => {
+    document.body.innerHTML = `
+      <form>
+        <input id="email" type="email" value="not-an-email" required />
+        <input id="name" type="text" value="" required />
+      </form>
+    `;
+    // Trigger native validation
+    const form = document.querySelector('form')!;
+    form.reportValidity();
+    form.requestSubmit();
+
+    const snapshot = createSnapshot(document, new RefRegistry(), {});
+
+    expect(snapshot.text).toContain('validation=');
+    expect(snapshot.nodes.some((n) => n.validationMessage)).toBe(true);
+  });
+
+  it('reports required attribute on fields', () => {
+    document.body.innerHTML = '<input type="email" required />';
+    const snapshot = createSnapshot(document, new RefRegistry(), {});
+
+    expect(snapshot.text).toContain('required=true');
+  });
 });

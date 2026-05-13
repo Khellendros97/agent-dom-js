@@ -102,10 +102,14 @@ function describeElement(element: Element, ref: string, maskSensitiveValues: boo
   if (element instanceof HTMLInputElement) {
     node.inputType = element.type;
     node.placeholder = element.placeholder || undefined;
+    node.required = element.required || undefined;
+    captureValidation(element, node);
   }
 
   if (element instanceof HTMLTextAreaElement) {
     node.placeholder = element.placeholder || undefined;
+    node.required = element.required || undefined;
+    captureValidation(element, node);
   }
 
   if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
@@ -120,7 +124,9 @@ function describeElement(element: Element, ref: string, maskSensitiveValues: boo
   if (element instanceof HTMLSelectElement) {
     node.value = element.value;
     node.disabled = element.disabled;
+    node.required = element.required || undefined;
     node.options = Array.from(element.options).map((opt) => opt.textContent?.trim() ?? opt.value);
+    captureValidation(element, node);
   }
 
   if (element instanceof HTMLButtonElement) {
@@ -130,6 +136,15 @@ function describeElement(element: Element, ref: string, maskSensitiveValues: boo
   return node;
 }
 
+function captureValidation(
+  element: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement,
+  node: SnapshotNode,
+): void {
+  if (!element.willValidate) return;
+  if (element.validity.valid) return;
+  node.validationMessage = element.validationMessage;
+}
+
 function renderNode(node: SnapshotNode): string {
   const attrs = [`ref=${node.ref}`];
   if (node.inputType && node.inputType !== 'text') attrs.push(`type=${node.inputType}`);
@@ -137,6 +152,8 @@ function renderNode(node: SnapshotNode): string {
   if (node.value) attrs.push(`value="${escapeText(node.value)}"`);
   if (node.href) attrs.push(`href="${escapeText(node.href)}"`);
   if (node.options?.length) attrs.push(`options=[${node.options.map((o) => `"${escapeText(o)}"`).join(', ')}]`);
+  if (node.required) attrs.push('required=true');
+  if (node.validationMessage) attrs.push(`validation="${escapeText(node.validationMessage)}"`);
   if (node.checked !== undefined) attrs.push(`checked=${node.checked}`);
   if (node.disabled) attrs.push('disabled=true');
 
