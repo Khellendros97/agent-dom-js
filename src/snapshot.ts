@@ -26,7 +26,7 @@ export function createSnapshot(
   const nodes: SnapshotNode[] = [];
   const scope = root instanceof Document ? root.body : root;
 
-  collectHeadings(scope, lines);
+  collectHeadings(scope, lines, options);
 
   scope.querySelectorAll(INTERACTIVE_SELECTOR).forEach((element) => {
     if (!isElementVisible(element)) return;
@@ -41,9 +41,14 @@ export function createSnapshot(
   return { text: lines.join('\n'), nodes };
 }
 
-function collectHeadings(root: ParentNode, lines: string[]): void {
+function collectHeadings(
+  root: ParentNode,
+  lines: string[],
+  options: Pick<AgentDomOptions, 'allowSelectors' | 'denySelectors'>,
+): void {
   root.querySelectorAll('h1,h2,h3').forEach((heading) => {
     if (!isElementVisible(heading)) return;
+    if (!isAllowedByPolicy(heading, options)) return;
     const name = heading.textContent?.replace(/\s+/g, ' ').trim();
     if (name) lines.push(`- heading "${escapeText(name)}"`);
   });

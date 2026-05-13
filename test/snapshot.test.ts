@@ -37,4 +37,12 @@ describe('createSnapshot', () => {
     expect(snapshot.text).not.toContain('危险按钮');
     expect(snapshot.nodes).toHaveLength(1);
   });
+
+  it('excludes denied headings from snapshot text', () => {
+    document.body.innerHTML = '<h1 class="public">可见标题</h1><h1 class="secret">敏感标题</h1><button>按钮</button>';
+    const snapshot = createSnapshot(document, new RefRegistry(), { denySelectors: ['.secret'] });
+
+    expect(snapshot.text).toContain('可见标题');
+    expect(snapshot.text).not.toContain('敏感标题');
+  });
 });
