@@ -4,16 +4,23 @@
   background: #f7f4fb;
 }
 
-body {
-  margin: 0;
-  padding: 32px;
+* { box-sizing: border-box; }
+
+body { margin: 0; }
+
+.app-layout {
+  display: flex;
+  min-height: 100vh;
 }
 
+/* ── 主内容区 ── */
 main {
-  max-width: 1040px;
-  margin: 0 auto;
+  flex: 1;
+  min-width: 0;
+  padding: 32px;
   display: grid;
   gap: 24px;
+  align-content: start;
 }
 
 section {
@@ -24,10 +31,7 @@ section {
   box-shadow: 0 10px 24px rgb(83 52 124 / 8%);
 }
 
-h1,
-h2 {
-  margin-top: 0;
-}
+h1, h2 { margin-top: 0; }
 
 label {
   display: grid;
@@ -42,17 +46,9 @@ label {
   gap: 8px;
 }
 
-input,
-select,
-textarea,
-button {
-  font: inherit;
-}
+input, select, textarea, button { font: inherit; }
 
-input,
-select,
-textarea,
-.editable {
+input, select, textarea, .editable {
   border: 1px solid #c9b7df;
   border-radius: 8px;
   padding: 10px 12px;
@@ -67,27 +63,20 @@ button {
   cursor: pointer;
 }
 
-button.secondary {
-  background: #645a73;
-}
+button.secondary { background: #645a73; }
 
 table {
   width: 100%;
   border-collapse: collapse;
 }
 
-th,
-td {
+th, td {
   border-bottom: 1px solid #ebe4f3;
   padding: 10px;
   text-align: left;
 }
 
-.toolbar {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
+.toolbar { display: flex; gap: 12px; flex-wrap: wrap; }
 
 .status {
   min-height: 24px;
@@ -95,6 +84,97 @@ td {
   font-weight: 700;
 }
 
-.editable {
-  min-height: 48px;
+.editable { min-height: 48px; }
+
+/* ── 侧边栏 ── */
+aside.sidebar {
+  width: 400px;
+  flex-shrink: 0;
+  background: #fff;
+  border-left: 1px solid #e4dcf0;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -4px 0 20px rgb(83 52 124 / 8%);
 }
+
+.sidebar-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #ebe4f3;
+  font-weight: 700;
+  font-size: 15px;
+  color: #6b3dc7;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.refresh-btn {
+  font-size: 12px;
+  padding: 6px 10px;
+  background: #e4dcf0;
+  color: #6b3dc7;
+}
+
+.snapshot-tree {
+  flex: 1;
+  overflow: auto;
+  padding: 12px 20px;
+  font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-all;
+  color: #1a1f2e;
+  background: #faf9fd;
+  margin: 0;
+}
+
+/* ── 操作面板 ── */
+.control-panel {
+  border-top: 1px solid #ebe4f3;
+  padding: 16px 20px;
+  display: grid;
+  gap: 10px;
+}
+
+.control-panel label {
+  font-size: 12px;
+  gap: 4px;
+  margin-bottom: 0;
+}
+
+.control-panel .row {
+  display: flex;
+  gap: 8px;
+}
+
+.control-panel input,
+.control-panel select {
+  padding: 8px 10px;
+  border: 1px solid #c9b7df;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.control-panel .row input { flex: 1; }
+
+.exec-btn {
+  background: #14804a;
+  width: 100%;
+}
+
+.exec-btn:hover { background: #0f6b3d; }
+
+.action-log {
+  font-size: 12px;
+  color: #645a73;
+  min-height: 18px;
+  max-height: 60px;
+  overflow: auto;
+  background: #faf9fd;
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+
+.action-log .error { color: #d3193a; }
+.action-log .success { color: #14804a; }
