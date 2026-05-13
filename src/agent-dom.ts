@@ -4,7 +4,7 @@ import { RefRegistry } from './ref-registry';
 import { failure, success } from './result';
 import { createSnapshot } from './snapshot';
 import { resolveTarget } from './target';
-import type { ActionResult, AgentDom, AgentDomOptions, AgentDomResult, SnapshotResult, WaitOptions } from './types';
+import type { ActionResult, AgentDom, AgentDomOptions, AgentDomResult, SnapshotOptions, SnapshotResult, WaitOptions } from './types';
 import { waitForCondition } from './wait';
 
 export function createAgentDom(options: AgentDomOptions = {}): AgentDom {
@@ -16,8 +16,8 @@ export function createAgentDom(options: AgentDomOptions = {}): AgentDom {
   }
 
   return {
-    snapshot(): AgentDomResult<SnapshotResult> {
-      return success(createSnapshot(root, registry, {
+    snapshot(snapOptions?: SnapshotOptions): AgentDomResult<SnapshotResult> {
+      return success(createSnapshot(snapOptions?.scope ?? root, registry, {
         maskSensitiveValues: options.maskSensitiveValues ?? true,
         allowSelectors: options.allowSelectors,
         denySelectors: options.denySelectors,

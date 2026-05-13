@@ -20,6 +20,10 @@ export interface AgentDomOptions {
   maskSensitiveValues?: boolean;
 }
 
+export interface SnapshotOptions {
+  scope?: ParentNode;
+}
+
 export interface SnapshotNode {
   ref?: string;
   role: string;
@@ -52,7 +56,7 @@ export interface WaitOptions {
 }
 
 export interface AgentDom {
-  snapshot(): AgentDomResult<SnapshotResult>;
+  snapshot(options?: SnapshotOptions): AgentDomResult<SnapshotResult>;
   click(target: string): Promise<AgentDomResult<ActionResult>>;
   fill(target: string, value: string): Promise<AgentDomResult<ActionResult>>;
   focus(target: string): Promise<AgentDomResult<ActionResult>>;

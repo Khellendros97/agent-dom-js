@@ -58,6 +58,12 @@ export function isElementVisible(element: Element): boolean {
   if (!(element instanceof HTMLElement)) return false;
   if (element.hidden || element.getAttribute('aria-hidden') === 'true') return false;
 
+  // Modern API: handles ancestor display:none/visibility:hidden natively
+  if (typeof element.checkVisibility === 'function') {
+    return element.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true });
+  }
+
+  // jsdom / legacy fallback
   const style = element.ownerDocument.defaultView?.getComputedStyle(element);
   if (!style || style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') {
     return false;

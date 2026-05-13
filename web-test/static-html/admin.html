@@ -527,10 +527,12 @@
           document.getElementById('submit-btn').textContent = '保存';
         }
         document.getElementById('modal-overlay').classList.add('open');
+        if (window.refreshSnapshot) setTimeout(window.refreshSnapshot, 200);
       };
 
       window.closeModal = () => {
         document.getElementById('modal-overlay').classList.remove('open');
+        if (window.refreshSnapshot) setTimeout(window.refreshSnapshot, 200);
         clearErrors();
       };
 
@@ -619,7 +621,9 @@
       const agentDom = createAgentDom();
 
       window.refreshSnapshot = () => {
-        const result = agentDom.snapshot();
+        const modalOpen = document.querySelector('.modal-overlay.open');
+        const scope = modalOpen?.querySelector('.modal') ?? null;
+        const result = agentDom.snapshot(scope ? { scope } : undefined);
         const el = document.getElementById('snap-tree');
         el.textContent = result.ok ? result.data.text : `[error] ${result.error}`;
       };
