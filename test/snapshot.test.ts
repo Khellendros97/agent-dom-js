@@ -28,4 +28,13 @@ describe('createSnapshot', () => {
     expect(snapshot.text).toContain('value="[masked]"');
     expect(snapshot.text).not.toContain('secret');
   });
+
+  it('excludes denied elements from snapshot', () => {
+    document.body.innerHTML = '<button class="safe">安全按钮</button><button class="danger">危险按钮</button>';
+    const snapshot = createSnapshot(document, new RefRegistry(), { denySelectors: ['.danger'] });
+
+    expect(snapshot.text).toContain('安全按钮');
+    expect(snapshot.text).not.toContain('危险按钮');
+    expect(snapshot.nodes).toHaveLength(1);
+  });
 });

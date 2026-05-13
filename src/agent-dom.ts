@@ -17,7 +17,11 @@ export function createAgentDom(options: AgentDomOptions = {}): AgentDom {
 
   return {
     snapshot(): AgentDomResult<SnapshotResult> {
-      return success(createSnapshot(root, registry, { maskSensitiveValues: options.maskSensitiveValues ?? true }));
+      return success(createSnapshot(root, registry, {
+        maskSensitiveValues: options.maskSensitiveValues ?? true,
+        allowSelectors: options.allowSelectors,
+        denySelectors: options.denySelectors,
+      }));
     },
 
     async click(target: string): Promise<AgentDomResult<ActionResult>> {
@@ -52,14 +56,24 @@ export function createAgentDom(options: AgentDomOptions = {}): AgentDom {
     },
 
     async waitFor(target: string, waitOptions: WaitOptions = {}): Promise<AgentDomResult<ActionResult>> {
+      let permanentError: AgentDomResult<ActionResult> | null = null;
+
       const result = await waitForCondition(() => {
         const resolved = resolve(target);
-        if (!resolved.ok) return false;
+        if (!resolved.ok) {
+          // Deterministic errors: bail out immediately instead of timing out
+          if (resolved.code === 'POLICY_BLOCKED' || resolved.code === 'STALE_REF') {
+            permanentError = resolved;
+            return true; // signal to exit early via error path
+          }
+          return false;
+        }
         if (waitOptions.text) return (resolved.data.textContent ?? '').includes(waitOptions.text);
         if (waitOptions.state === 'visible') return isElementVisible(resolved.data);
         return true;
       }, { timeoutMs: waitOptions.timeoutMs });
 
+      if (permanentError) return permanentError;
       return result.ok ? success({ target }) : result;
     },
   };

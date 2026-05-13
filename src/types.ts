@@ -25,7 +25,11 @@ export interface SnapshotNode {
   role: string;
   name: string;
   tagName: string;
+  inputType?: string;
+  placeholder?: string;
   value?: string;
+  href?: string;
+  options?: string[];
   disabled?: boolean;
   checked?: boolean;
 }

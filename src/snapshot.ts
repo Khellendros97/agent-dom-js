@@ -1,4 +1,5 @@
 import { getAccessibleName, getRole, isElementVisible, isSensitiveElement } from './dom-utils';
+import { isAllowedByPolicy } from './policy';
 import type { RefRegistry } from './ref-registry';
 import type { AgentDomOptions, SnapshotNode, SnapshotResult } from './types';
 
@@ -17,7 +18,7 @@ const INTERACTIVE_SELECTOR = [
 export function createSnapshot(
   root: ParentNode,
   registry: RefRegistry,
-  options: Pick<AgentDomOptions, 'maskSensitiveValues'> = {},
+  options: Pick<AgentDomOptions, 'maskSensitiveValues' | 'allowSelectors' | 'denySelectors'> = {},
 ): SnapshotResult {
   registry.clear();
 
@@ -29,6 +30,7 @@ export function createSnapshot(
 
   scope.querySelectorAll(INTERACTIVE_SELECTOR).forEach((element) => {
     if (!isElementVisible(element)) return;
+    if (!isAllowedByPolicy(element, options)) return;
 
     const ref = registry.register(element);
     const node = describeElement(element, ref, options.maskSensitiveValues ?? true);
@@ -57,6 +59,19 @@ function describeElement(element: Element, ref: string, maskSensitiveValues: boo
     tagName: element.tagName.toLowerCase(),
   };
 
+  if (element instanceof HTMLAnchorElement && element.href) {
+    node.href = element.href;
+  }
+
+  if (element instanceof HTMLInputElement) {
+    node.inputType = element.type;
+    node.placeholder = element.placeholder || undefined;
+  }
+
+  if (element instanceof HTMLTextAreaElement) {
+    node.placeholder = element.placeholder || undefined;
+  }
+
   if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
     node.value = maskSensitiveValues && isSensitiveElement(element) ? '[masked]' : element.value;
     node.disabled = element.disabled;
@@ -69,6 +84,11 @@ function describeElement(element: Element, ref: string, maskSensitiveValues: boo
   if (element instanceof HTMLSelectElement) {
     node.value = element.value;
     node.disabled = element.disabled;
+    node.options = Array.from(element.options).map((opt) => opt.textContent?.trim() ?? opt.value);
+  }
+
+  if (element instanceof HTMLButtonElement) {
+    node.disabled = node.disabled || element.disabled;
   }
 
   return node;
@@ -76,7 +96,11 @@ function describeElement(element: Element, ref: string, maskSensitiveValues: boo
 
 function renderNode(node: SnapshotNode): string {
   const attrs = [`ref=${node.ref}`];
+  if (node.inputType && node.inputType !== 'text') attrs.push(`type=${node.inputType}`);
+  if (node.placeholder) attrs.push(`placeholder="${escapeText(node.placeholder)}"`);
   if (node.value) attrs.push(`value="${escapeText(node.value)}"`);
+  if (node.href) attrs.push(`href="${escapeText(node.href)}"`);
+  if (node.options?.length) attrs.push(`options=[${node.options.map((o) => `"${escapeText(o)}"`).join(', ')}]`);
   if (node.checked !== undefined) attrs.push(`checked=${node.checked}`);
   if (node.disabled) attrs.push('disabled=true');
 
