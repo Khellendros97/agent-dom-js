@@ -90,6 +90,8 @@ function AgentSidebar({ agentDom }) {
       extra={<Button size="small" icon={<ReloadOutlined />} onClick={refresh}>刷新</Button>}
       style={{ width: 380, flexShrink: 0, borderRadius: 0, borderRight: 'none', borderTop: 'none', borderBottom: 'none', display: 'flex', flexDirection: 'column' }}
       styles={{ body: { flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 0 } }}
+      onMouseDown={(e) => e.stopPropagation()}
+      onPointerDown={(e) => e.stopPropagation()}
     >
       <Paragraph
         style={{ flex: 1, overflow: 'auto', margin: 0, padding: '12px 16px', fontFamily: 'monospace', fontSize: 12, lineHeight: 1.55, whiteSpace: 'pre-wrap', wordBreak: 'break-all', background: '#fafafa', minHeight: 0 }}
