@@ -101,7 +101,7 @@ function describeElement(element: Element, ref: string, maskSensitiveValues: boo
 
   if (element instanceof HTMLInputElement) {
     node.inputType = element.type;
-    node.placeholder = element.placeholder || undefined;
+    node.placeholder = element.placeholder || getAntdPlaceholder(element) || undefined;
     node.required = element.required || undefined;
     captureValidation(element, node);
   }
@@ -167,4 +167,8 @@ function escapeText(value: string): string {
 function safeValue(element: { value: unknown }): string {
   const v = element.value;
   return typeof v === 'string' ? v : (v != null ? String(v) : '');
+}
+
+function getAntdPlaceholder(element: Element): string | null {
+  return element.closest('.ant-select')?.querySelector('.ant-select-selection-placeholder')?.textContent?.trim() ?? null;
 }
