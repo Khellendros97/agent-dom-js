@@ -79,7 +79,7 @@ function AgentSidebar({ agentDom }) {
   }, [agentDom, target, action, value, addLog, refresh]);
 
   return (
-    <div style={{ width: 380, flexShrink: 0, background: '#fff', borderLeft: '1px solid #f0f0f0', display: 'flex', flexDirection: 'column', fontSize: 13 }}>
+    <div style={{ width: 380, flexShrink: 0, background: '#fff', borderLeft: '1px solid #f0f0f0', display: 'flex', flexDirection: 'column', fontSize: 13, position: 'relative', zIndex: 1100 }}>
       <div style={{ padding: '12px 16px', borderBottom: '1px solid #f0f0f0', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span>Agent DOM</span>
         <Button size="small" onClick={refresh}>刷新</Button>
