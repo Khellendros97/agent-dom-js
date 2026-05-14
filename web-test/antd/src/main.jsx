@@ -206,7 +206,7 @@ function App() {
           <Button type="text" icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />} onClick={() => setCollapsed(!collapsed)} />
           <Breadcrumb style={{ marginLeft: 16 }} items={[{ title: '首页' }, { title: '用户管理' }]} />
         </Header>
-        <Layout>
+        <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
           <Content style={{ flex: 1, padding: 24, overflow: 'auto' }}>
             <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Title level={4} style={{ margin: 0 }}>用户管理</Title>
@@ -219,7 +219,7 @@ function App() {
             <Table rowKey="id" columns={columns} dataSource={filtered} loading={loading} pagination={{ showSizeChanger: true, showTotal: (t) => `共 ${t} 条` }} />
           </Content>
           <AgentSidebar agentDom={agentDom.current} />
-        </Layout>
+        </div>
       </Layout>
 
       <Modal title={editingId ? '编辑用户' : '添加用户'} open={modalOpen} onOk={handleSubmit} onCancel={() => setModalOpen(false)} confirmLoading={loading} destroyOnClose width={520}>
