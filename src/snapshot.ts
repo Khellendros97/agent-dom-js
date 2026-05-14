@@ -170,5 +170,5 @@ function safeValue(element: { value: unknown }): string {
 }
 
 function getAntdPlaceholder(element: Element): string | null {
-  return element.closest('.ant-select')?.querySelector('.ant-select-selection-placeholder')?.textContent?.trim() ?? null;
+  return element.closest('.ant-select')?.querySelector('.ant-select-placeholder')?.textContent?.trim() ?? null;
 }
