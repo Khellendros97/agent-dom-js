@@ -88,8 +88,8 @@ function AgentSidebar({ agentDom }) {
       size="small"
       title={<Space><ThunderboltOutlined />Agent DOM</Space>}
       extra={<Button size="small" icon={<ReloadOutlined />} onClick={refresh}>刷新</Button>}
-      style={{ width: 380, flexShrink: 0, borderRadius: 0, borderRight: 'none', borderTop: 'none', borderBottom: 'none', display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 1100 }}
-      bodyStyle={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 0 }}
+      style={{ width: 380, flexShrink: 0, borderRadius: 0, borderRight: 'none', borderTop: 'none', borderBottom: 'none', display: 'flex', flexDirection: 'column' }}
+      styles={{ body: { flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 0 } }}
     >
       <Paragraph
         style={{ flex: 1, overflow: 'auto', margin: 0, padding: '12px 16px', fontFamily: 'monospace', fontSize: 12, lineHeight: 1.55, whiteSpace: 'pre-wrap', wordBreak: 'break-all', background: '#fafafa', minHeight: 0 }}
@@ -99,10 +99,10 @@ function AgentSidebar({ agentDom }) {
       </Paragraph>
       <Divider style={{ margin: 0 }} />
       <div style={{ padding: '12px 16px', flexShrink: 0 }}>
-        <Space direction="vertical" size="small" style={{ width: '100%' }}>
+        <Space orientation="vertical" size="small" style={{ width: '100%' }}>
           <Input size="small" value={target} onChange={(e) => setTarget(e.target.value)} placeholder="目标 (ref 或 CSS selector)" prefix={<Text type="secondary" style={{ fontSize: 11 }}>@e1</Text>} />
           <Space.Compact block>
-            <Select size="small" value={action} onChange={setAction} style={{ width: 120 }}
+            <Select size="small" value={action} onChange={setAction} style={{ width: 120 }} getPopupContainer={(trigger) => trigger.parentElement || document.body}
               options={[{ value: 'click', label: 'click' }, { value: 'fill', label: 'fill' }, { value: 'focus', label: 'focus' }, { value: 'getText', label: 'getText' }, { value: 'isVisible', label: 'isVisible' }]}
             />
             {action === 'fill' && (
@@ -231,7 +231,7 @@ function App() {
         </div>
       </Layout>
 
-      <Modal title={editingId ? '编辑用户' : '添加用户'} open={modalOpen} onOk={handleSubmit} onCancel={() => setModalOpen(false)} confirmLoading={loading} destroyOnClose width={520}>
+      <Modal title={editingId ? '编辑用户' : '添加用户'} open={modalOpen} onOk={handleSubmit} onCancel={() => setModalOpen(false)} confirmLoading={loading} destroyOnHidden width={520}>
         <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
           <Form.Item name="name" label="姓名" rules={[{ required: true, message: '请输入姓名' }]}>
             <Input placeholder="请输入姓名" autoComplete="name" />
