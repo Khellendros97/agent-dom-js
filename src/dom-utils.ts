@@ -65,14 +65,20 @@ export function isElementVisible(element: Element): boolean {
   if (!(element instanceof HTMLElement)) return false;
   if (element.hidden || element.getAttribute('aria-hidden') === 'true') return false;
 
+  const hasExplicitRole = element.hasAttribute('role');
+
   // Modern API: handles ancestor display:none/visibility:hidden natively
   if (typeof element.checkVisibility === 'function') {
-    return element.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true });
+    // Explicit role elements may be transparent (antd input[role="combobox"] has opacity:0)
+    return element.checkVisibility({ checkOpacity: !hasExplicitRole, checkVisibilityCSS: true });
   }
 
   // jsdom / legacy fallback
   const style = element.ownerDocument.defaultView?.getComputedStyle(element);
-  if (!style || style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') {
+  if (!style || style.display === 'none' || style.visibility === 'hidden') {
+    return false;
+  }
+  if (!hasExplicitRole && style.opacity === '0') {
     return false;
   }
 
