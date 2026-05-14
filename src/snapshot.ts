@@ -113,7 +113,7 @@ function describeElement(element: Element, ref: string, maskSensitiveValues: boo
   }
 
   if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
-    node.value = maskSensitiveValues && isSensitiveElement(element) ? '[masked]' : element.value;
+    node.value = maskSensitiveValues && isSensitiveElement(element) ? '[masked]' : safeValue(element);
     node.disabled = element.disabled;
   }
 
@@ -122,7 +122,7 @@ function describeElement(element: Element, ref: string, maskSensitiveValues: boo
   }
 
   if (element instanceof HTMLSelectElement) {
-    node.value = element.value;
+    node.value = safeValue(element);
     node.disabled = element.disabled;
     node.required = element.required || undefined;
     node.options = Array.from(element.options).map((opt) => opt.textContent?.trim() ?? opt.value);
@@ -162,4 +162,9 @@ function renderNode(node: SnapshotNode): string {
 
 function escapeText(value: string): string {
   return value.replace(/"/g, '\\"');
+}
+
+function safeValue(element: { value: unknown }): string {
+  const v = element.value;
+  return typeof v === 'string' ? v : (v != null ? String(v) : '');
 }

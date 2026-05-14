@@ -48,10 +48,14 @@ export function getAccessibleName(element: Element): string {
   const placeholder = (element as HTMLInputElement).placeholder?.trim();
   if (placeholder) return placeholder;
 
-  const value = (element as HTMLInputElement).value?.trim();
+  const value = toString((element as HTMLInputElement).value).trim();
   if (value && ['button', 'submit', 'reset'].includes((element as HTMLInputElement).type)) return value;
 
   return element.textContent?.replace(/\s+/g, ' ').trim() ?? '';
+}
+
+function toString(v: unknown): string {
+  return typeof v === 'string' ? v : (v != null ? String(v) : '');
 }
 
 export function isElementVisible(element: Element): boolean {
