@@ -119,10 +119,19 @@ function describeElement(element: Element, ref: string, maskSensitiveValues: boo
 
   // Ant Design Select: value is on .ant-select-content via title or textContent
   if (element instanceof HTMLInputElement && element.closest('.ant-select')) {
-    const content = element.closest('.ant-select')?.querySelector('.ant-select-content');
+    const selectRoot = element.closest('.ant-select')!;
+    const content = selectRoot.querySelector('.ant-select-content');
     if (content) {
       const selected = content.getAttribute('title')?.trim() || content.textContent?.replace(element.value, '').trim() || undefined;
       if (selected) node.value = selected;
+    }
+    // Options from the dropdown portal (if visible)
+    const dropdown = document.querySelector('.ant-select-dropdown:not(.ant-select-dropdown-hidden)');
+    if (dropdown) {
+      const opts = Array.from(dropdown.querySelectorAll('.ant-select-item-option-content'))
+        .map((el) => el.textContent?.trim())
+        .filter(Boolean) as string[];
+      if (opts.length) node.options = opts;
     }
   }
 
