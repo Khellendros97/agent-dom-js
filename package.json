@@ -35,7 +35,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/user/agent-dom-js"
+    "url": "https://github.com/Khellendros97/agent-dom-js.git"
   },
   "devDependencies": {
     "@types/node": "latest",
