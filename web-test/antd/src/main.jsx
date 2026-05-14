@@ -57,7 +57,9 @@ function AgentSidebar({ agentDom }) {
   }, []);
 
   const refresh = useCallback(() => {
-    const r = agentDom.snapshot();
+    const modalWrap = document.querySelector('.ant-modal-wrap');
+    const scope = modalWrap ?? null;
+    const r = agentDom.snapshot(scope ? { scope } : undefined);
     setSnapText(r.ok ? r.data.text : `[snapshot failed] ${r.error}`);
   }, [agentDom]);
 
