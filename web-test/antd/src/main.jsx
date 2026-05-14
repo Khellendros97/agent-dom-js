@@ -3,7 +3,9 @@ import { createRoot } from 'react-dom/client';
 import {
   Breadcrumb,
   Button,
+  Card,
   Checkbox,
+  Divider,
   Form,
   Input,
   Layout,
@@ -19,16 +21,18 @@ import {
 import {
   DashboardOutlined,
   LogoutOutlined,
+  ReloadOutlined,
   SettingOutlined,
   TeamOutlined,
   FileTextOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  ThunderboltOutlined,
 } from '@ant-design/icons';
 import { createAgentDom } from 'agent-dom-js';
 
 const { Header, Sider, Content } = Layout;
-const { Title } = Typography;
+const { Title, Text, Paragraph } = Typography;
 
 const INITIAL_USERS = [
   { id: 1, name: '张伟', email: 'zhangwei@example.com', role: '管理员', status: 'active' },
@@ -43,7 +47,6 @@ const INITIAL_USERS = [
 
 const STATUS_MAP = { active: { label: '启用', color: 'green' }, inactive: { label: '停用', color: 'red' }, pending: { label: '待审核', color: 'orange' } };
 const ROLES = ['管理员', '编辑', '访客'];
-const ACTIONS = ['snapshot', 'click', 'fill', 'focus', 'getText', 'isVisible'];
 
 function AgentSidebar({ agentDom }) {
   const [snapText, setSnapText] = useState('');
@@ -81,36 +84,40 @@ function AgentSidebar({ agentDom }) {
   }, [agentDom, target, action, value, addLog, refresh]);
 
   return (
-    <div style={{ width: 380, flexShrink: 0, background: '#fff', borderLeft: '1px solid #f0f0f0', display: 'flex', flexDirection: 'column', fontSize: 13, position: 'relative', zIndex: 1100, maxHeight: '100vh' }}>
-      <div style={{ padding: '12px 16px', borderBottom: '1px solid #f0f0f0', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
-        <span>Agent DOM</span>
-        <Button size="small" onClick={refresh}>刷新</Button>
+    <Card
+      size="small"
+      title={<Space><ThunderboltOutlined />Agent DOM</Space>}
+      extra={<Button size="small" icon={<ReloadOutlined />} onClick={refresh}>刷新</Button>}
+      style={{ width: 380, flexShrink: 0, borderRadius: 0, borderRight: 'none', borderTop: 'none', borderBottom: 'none', display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 1100 }}
+      bodyStyle={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 0 }}
+    >
+      <Paragraph
+        style={{ flex: 1, overflow: 'auto', margin: 0, padding: '12px 16px', fontFamily: 'monospace', fontSize: 12, lineHeight: 1.55, whiteSpace: 'pre-wrap', wordBreak: 'break-all', background: '#fafafa', minHeight: 0 }}
+        code
+      >
+        {snapText || '等待 snapshot()...'}
+      </Paragraph>
+      <Divider style={{ margin: 0 }} />
+      <div style={{ padding: '12px 16px', flexShrink: 0 }}>
+        <Space direction="vertical" size="small" style={{ width: '100%' }}>
+          <Input size="small" value={target} onChange={(e) => setTarget(e.target.value)} placeholder="目标 (ref 或 CSS selector)" prefix={<Text type="secondary" style={{ fontSize: 11 }}>@e1</Text>} />
+          <Space.Compact block>
+            <Select size="small" value={action} onChange={setAction} style={{ width: 120 }}
+              options={[{ value: 'click', label: 'click' }, { value: 'fill', label: 'fill' }, { value: 'focus', label: 'focus' }, { value: 'getText', label: 'getText' }, { value: 'isVisible', label: 'isVisible' }]}
+            />
+            {action === 'fill' && (
+              <Input size="small" value={value} onChange={(e) => setValue(e.target.value)} placeholder="填充值" style={{ flex: 1 }} />
+            )}
+          </Space.Compact>
+          <Button type="primary" size="small" block onClick={exec} icon={<ThunderboltOutlined />} style={{ background: '#52c41a', borderColor: '#52c41a' }}>执行</Button>
+        </Space>
+        <div style={{ marginTop: 8, fontSize: 11, color: '#888', maxHeight: 72, overflow: 'auto', lineHeight: 1.6 }}>
+          {logs.map((entry, i) => (
+            <div key={i} style={{ color: entry.type === 'error' ? '#ff4d4f' : entry.type === 'success' ? '#52c41a' : '#888' }}>{entry.text}</div>
+          ))}
+        </div>
       </div>
-      <pre style={{ flex: 1, overflow: 'auto', margin: 0, padding: '10px 16px', fontFamily: 'monospace', fontSize: 12, lineHeight: 1.55, whiteSpace: 'pre-wrap', wordBreak: 'break-all', background: '#fafafa', minHeight: 0 }}>{snapText || '等待 snapshot()...'}</pre>
-
-      <div style={{ borderTop: '1px solid #f0f0f0', padding: '12px 16px', display: 'grid', gap: 8, flexShrink: 0 }}>
-        <div>
-          <div style={{ fontSize: 12, marginBottom: 4 }}>目标 (ref 或 CSS selector)</div>
-          <Input size="small" value={target} onChange={(e) => setTarget(e.target.value)} placeholder="@e1" />
-        </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 12, marginBottom: 4 }}>操作</div>
-            <Select size="small" value={action} onChange={setAction} style={{ width: '100%' }} options={ACTIONS.map((a) => ({ value: a, label: a }))} />
-          </div>
-          {action === 'fill' && (
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 12, marginBottom: 4 }}>填充值</div>
-              <Input size="small" value={value} onChange={(e) => setValue(e.target.value)} placeholder="填入的值" />
-            </div>
-          )}
-        </div>
-        <Button type="primary" block onClick={exec} style={{ background: '#52c41a', borderColor: '#52c41a' }}>执行</Button>
-        <div style={{ fontSize: 11, color: '#888', maxHeight: 72, overflow: 'auto', background: '#fafafa', borderRadius: 6, padding: '4px 8px', lineHeight: 1.6 }}>
-          {logs.map((entry, i) => <div key={i} style={{ color: entry.type === 'error' ? '#ff4d4f' : entry.type === 'success' ? '#52c41a' : '#888' }}>{entry.text}</div>)}
-        </div>
-      </div>
-    </div>
+    </Card>
   );
 }
 
