@@ -117,6 +117,17 @@ function describeElement(element: Element, ref: string, maskSensitiveValues: boo
     node.disabled = element.disabled;
   }
 
+  // Ant Design Select: value is in selection-item span, not on the input
+  if (element instanceof HTMLInputElement && element.type === 'search' && element.closest('.ant-select')) {
+    const selected = element.closest('.ant-select')?.querySelector('.ant-select-selection-item')?.textContent?.trim();
+    if (selected) node.value = selected;
+  }
+
+  // Fallback: use placeholder as name when name is empty
+  if (!node.name && node.placeholder) {
+    node.name = node.placeholder;
+  }
+
   if (element instanceof HTMLInputElement && ['checkbox', 'radio'].includes(element.type)) {
     node.checked = element.checked;
   }
