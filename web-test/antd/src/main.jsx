@@ -79,14 +79,14 @@ function AgentSidebar({ agentDom }) {
   }, [agentDom, target, action, value, addLog, refresh]);
 
   return (
-    <div style={{ width: 380, flexShrink: 0, background: '#fff', borderLeft: '1px solid #f0f0f0', display: 'flex', flexDirection: 'column', fontSize: 13, position: 'relative', zIndex: 1100 }}>
-      <div style={{ padding: '12px 16px', borderBottom: '1px solid #f0f0f0', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div style={{ width: 380, flexShrink: 0, background: '#fff', borderLeft: '1px solid #f0f0f0', display: 'flex', flexDirection: 'column', fontSize: 13, position: 'relative', zIndex: 1100, maxHeight: '100vh' }}>
+      <div style={{ padding: '12px 16px', borderBottom: '1px solid #f0f0f0', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
         <span>Agent DOM</span>
         <Button size="small" onClick={refresh}>刷新</Button>
       </div>
-      <pre style={{ flex: 1, overflow: 'auto', margin: 0, padding: '10px 16px', fontFamily: 'monospace', fontSize: 12, lineHeight: 1.55, whiteSpace: 'pre-wrap', wordBreak: 'break-all', background: '#fafafa' }}>{snapText || '等待 snapshot()...'}</pre>
+      <pre style={{ flex: 1, overflow: 'auto', margin: 0, padding: '10px 16px', fontFamily: 'monospace', fontSize: 12, lineHeight: 1.55, whiteSpace: 'pre-wrap', wordBreak: 'break-all', background: '#fafafa', minHeight: 0 }}>{snapText || '等待 snapshot()...'}</pre>
 
-      <div style={{ borderTop: '1px solid #f0f0f0', padding: '12px 16px', display: 'grid', gap: 8 }}>
+      <div style={{ borderTop: '1px solid #f0f0f0', padding: '12px 16px', display: 'grid', gap: 8, flexShrink: 0 }}>
         <div>
           <div style={{ fontSize: 12, marginBottom: 4 }}>目标 (ref 或 CSS selector)</div>
           <Input size="small" value={target} onChange={(e) => setTarget(e.target.value)} placeholder="@e1" />
