@@ -14,6 +14,10 @@ export class RefRegistry {
     return ref;
   }
 
+  registerChild(ref: string, element: Element): void {
+    this.elements.set(ref, element);
+  }
+
   resolve(target: string): Element | null {
     const ref = parseRef(target);
     if (!ref) {
@@ -31,13 +35,16 @@ export class RefRegistry {
 
 export function parseRef(target: string): string | null {
   const trimmed = target.trim();
-  if (/^@e\d+$/.test(trimmed)) {
+  // @e16, @e16-1
+  if (/^@e\d+(?:-\d+)?$/.test(trimmed)) {
     return trimmed.slice(1);
   }
-  if (/^ref=e\d+$/.test(trimmed)) {
+  // ref=e16, ref=e16-1
+  if (/^ref=e\d+(?:-\d+)?$/.test(trimmed)) {
     return trimmed.slice(4);
   }
-  if (/^e\d+$/.test(trimmed)) {
+  // e16, e16-1
+  if (/^e\d+(?:-\d+)?$/.test(trimmed)) {
     return trimmed;
   }
   return null;

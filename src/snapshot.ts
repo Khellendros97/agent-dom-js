@@ -16,7 +16,6 @@ const SNAPSHOT_SELECTOR = [
   '[role]',
   '[tabindex]',
   '[contenteditable="true"]',
-  '.ant-select-item-option',
 ].join(',');
 
 export function createSnapshot(
@@ -29,6 +28,7 @@ export function createSnapshot(
   const lines: string[] = [];
   const nodes: SnapshotNode[] = [];
   const scope = root instanceof Document ? root.body : root;
+  const seenOptions = new Set<Element>();
 
   scope.querySelectorAll(SNAPSHOT_SELECTOR).forEach((element) => {
     if (!isElementVisible(element)) return;
@@ -81,6 +81,25 @@ export function createSnapshot(
     const node = describeElement(element, ref, options.maskSensitiveValues ?? true);
     nodes.push(node);
     lines.push(renderNode(node));
+
+    // Ant Design Select: render child dropdown options inline
+    if (element instanceof HTMLInputElement && element.closest('.ant-select')) {
+      document.querySelectorAll('.ant-select-dropdown:not(.ant-select-dropdown-hidden) .ant-select-item-option').forEach((opt) => {
+        if (!isElementVisible(opt)) return;
+        if (seenOptions.has(opt)) return;
+        seenOptions.add(opt);
+        const childRef = `${ref}-${seenOptions.size}`;
+        registry.registerChild(childRef, opt);
+        const childNode: SnapshotNode = {
+          ref: childRef,
+          role: 'option',
+          name: opt.querySelector('.ant-select-item-option-content')?.textContent?.trim() || opt.getAttribute('title') || '',
+          tagName: 'div',
+        };
+        nodes.push(childNode);
+        lines.push(`  ${renderNode(childNode)}`);
+      });
+    }
   });
 
   return { text: lines.join('\n'), nodes };
