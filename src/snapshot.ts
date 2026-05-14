@@ -16,6 +16,7 @@ const SNAPSHOT_SELECTOR = [
   '[role]',
   '[tabindex]',
   '[contenteditable="true"]',
+  '.ant-select-item-option',
 ].join(',');
 
 export function createSnapshot(
@@ -125,19 +126,12 @@ function describeElement(element: Element, ref: string, maskSensitiveValues: boo
       const selected = content.getAttribute('title')?.trim() || content.textContent?.replace(element.value, '').trim() || undefined;
       if (selected) node.value = selected;
     }
-    // Options from the dropdown portal (if visible)
-    const dropdown = document.querySelector('.ant-select-dropdown:not(.ant-select-dropdown-hidden)');
-    if (dropdown) {
-      const opts = Array.from(dropdown.querySelectorAll('.ant-select-item-option-content'))
-        .map((el) => el.textContent?.trim())
-        .filter(Boolean) as string[];
-      if (opts.length) node.options = opts;
-    }
   }
 
-  // Fallback: use placeholder as name when name is empty
-  if (!node.name && node.placeholder) {
-    node.name = node.placeholder;
+  // Ant Design dropdown option items
+  if (element.matches('.ant-select-item-option')) {
+    node.role = 'option';
+    node.name = element.querySelector('.ant-select-item-option-content')?.textContent?.trim() || element.getAttribute('title') || node.name;
   }
 
   if (element instanceof HTMLInputElement && ['checkbox', 'radio'].includes(element.type)) {
