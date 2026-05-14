@@ -48,26 +48,12 @@ const INITIAL_USERS = [
 const STATUS_MAP = { active: { label: '启用', color: 'green' }, inactive: { label: '停用', color: 'red' }, pending: { label: '待审核', color: 'orange' } };
 const ROLES = ['管理员', '编辑', '访客'];
 
-function AgentSidebar({ agentDom }) {
+function AgentSidebar({ agentDom, rootRef }) {
   const [snapText, setSnapText] = useState('');
   const [target, setTarget] = useState('');
   const [action, setAction] = useState('click');
   const [value, setValue] = useState('');
   const [logs, setLogs] = useState([]);
-  const sidebarRef = useRef(null);
-
-  // Block mousedown in capture phase to prevent antd Select from detecting outside clicks
-  useEffect(() => {
-    const el = sidebarRef.current;
-    if (!el) return;
-    const block = (e) => e.stopPropagation();
-    el.addEventListener('mousedown', block, true);
-    el.addEventListener('pointerdown', block, true);
-    return () => {
-      el.removeEventListener('mousedown', block, true);
-      el.removeEventListener('pointerdown', block, true);
-    };
-  }, []);
 
   const addLog = useCallback((msg, type = '') => {
     setLogs((prev) => [{ text: `[${new Date().toLocaleTimeString()}] ${msg}`, type }, ...prev.slice(0, 19)]);
@@ -98,7 +84,7 @@ function AgentSidebar({ agentDom }) {
   }, [agentDom, target, action, value, addLog, refresh]);
 
   return (
-    <div ref={sidebarRef} style={{ width: 380, flexShrink: 0 }}>
+    <div ref={rootRef} style={{ width: 380, flexShrink: 0 }}>
     <Card
       size="small"
       title={<Space><ThunderboltOutlined />Agent DOM</Space>}
@@ -142,6 +128,7 @@ function App() {
   const [users, setUsers] = useState(INITIAL_USERS);
   const [searchText, setSearchText] = useState('');
   const [statusFilter, setStatusFilter] = useState(undefined);
+  const [statusSelectOpen, setStatusSelectOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -149,6 +136,30 @@ function App() {
   const agentDom = useRef(null);
   if (!agentDom.current) agentDom.current = createAgentDom();
   const [messageApi, contextHolder] = message.useMessage();
+  const agentSidebarRef = useRef(null);
+  const lastAgentSidebarPointerAt = useRef(0);
+
+  // Record when pointer/mouse events originate from Agent sidebar
+  useEffect(() => {
+    const record = (event) => {
+      const path = event.composedPath?.();
+      const insideSidebar = path
+        ? path.includes(agentSidebarRef.current)
+        : agentSidebarRef.current?.contains(event.target);
+      if (insideSidebar) lastAgentSidebarPointerAt.current = performance.now();
+    };
+    window.addEventListener('pointerdown', record, true);
+    window.addEventListener('mousedown', record, true);
+    return () => {
+      window.removeEventListener('pointerdown', record, true);
+      window.removeEventListener('mousedown', record, true);
+    };
+  }, []);
+
+  const handleStatusSelectOpenChange = (nextOpen) => {
+    if (!nextOpen && performance.now() - lastAgentSidebarPointerAt.current < 150) return;
+    setStatusSelectOpen(nextOpen);
+  };
 
   const filtered = users.filter((u) => {
     const s = searchText.toLowerCase();
@@ -238,12 +249,12 @@ function App() {
             </div>
             <div style={{ marginBottom: 16, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
               <Input.Search placeholder="搜索姓名、邮箱..." allowClear style={{ width: 280 }} onSearch={setSearchText} onChange={(e) => { if (!e.target.value) setSearchText(''); }} />
-              <Select placeholder="筛选状态" allowClear style={{ width: 140 }} onChange={setStatusFilter} options={Object.entries(STATUS_MAP).map(([k, v]) => ({ value: k, label: v.label }))} />
+              <Select open={statusSelectOpen} onOpenChange={handleStatusSelectOpenChange} placeholder="筛选状态" allowClear style={{ width: 140 }} onChange={setStatusFilter} options={Object.entries(STATUS_MAP).map(([k, v]) => ({ value: k, label: v.label }))} />
               <Button type="primary" icon={<span>+</span>} onClick={openAdd}>添加用户</Button>
             </div>
             <Table rowKey="id" columns={columns} dataSource={filtered} loading={loading} pagination={{ showSizeChanger: true, showTotal: (t) => `共 ${t} 条` }} />
           </Content>
-          <AgentSidebar agentDom={agentDom.current} />
+          <AgentSidebar agentDom={agentDom.current} rootRef={agentSidebarRef} />
         </div>
       </Layout>
 
