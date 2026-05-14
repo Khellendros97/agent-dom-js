@@ -54,6 +54,20 @@ function AgentSidebar({ agentDom }) {
   const [action, setAction] = useState('click');
   const [value, setValue] = useState('');
   const [logs, setLogs] = useState([]);
+  const sidebarRef = useRef(null);
+
+  // Block mousedown in capture phase to prevent antd Select from detecting outside clicks
+  useEffect(() => {
+    const el = sidebarRef.current;
+    if (!el) return;
+    const block = (e) => e.stopPropagation();
+    el.addEventListener('mousedown', block, true);
+    el.addEventListener('pointerdown', block, true);
+    return () => {
+      el.removeEventListener('mousedown', block, true);
+      el.removeEventListener('pointerdown', block, true);
+    };
+  }, []);
 
   const addLog = useCallback((msg, type = '') => {
     setLogs((prev) => [{ text: `[${new Date().toLocaleTimeString()}] ${msg}`, type }, ...prev.slice(0, 19)]);
@@ -84,14 +98,13 @@ function AgentSidebar({ agentDom }) {
   }, [agentDom, target, action, value, addLog, refresh]);
 
   return (
+    <div ref={sidebarRef} style={{ width: 380, flexShrink: 0 }}>
     <Card
       size="small"
       title={<Space><ThunderboltOutlined />Agent DOM</Space>}
       extra={<Button size="small" icon={<ReloadOutlined />} onClick={refresh}>刷新</Button>}
-      style={{ width: 380, flexShrink: 0, borderRadius: 0, borderRight: 'none', borderTop: 'none', borderBottom: 'none', display: 'flex', flexDirection: 'column' }}
+      style={{ borderRadius: 0, borderRight: 'none', borderTop: 'none', borderBottom: 'none', display: 'flex', flexDirection: 'column' }}
       styles={{ body: { flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 0 } }}
-      onMouseDown={(e) => e.stopPropagation()}
-      onPointerDown={(e) => e.stopPropagation()}
     >
       <Paragraph
         style={{ flex: 1, overflow: 'auto', margin: 0, padding: '12px 16px', fontFamily: 'monospace', fontSize: 12, lineHeight: 1.55, whiteSpace: 'pre-wrap', wordBreak: 'break-all', background: '#fafafa', minHeight: 0 }}
@@ -120,6 +133,7 @@ function AgentSidebar({ agentDom }) {
         </div>
       </div>
     </Card>
+    </div>
   );
 }
 
