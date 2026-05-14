@@ -19,12 +19,18 @@ export async function clickElement(element: Element, target: string): Promise<Ag
   }
   try {
     element.scrollIntoView({ block: 'center', inline: 'center' });
-    element.focus();
 
-    if (element instanceof HTMLSelectElement && 'showPicker' in HTMLSelectElement.prototype) {
+    if (element instanceof HTMLSelectElement && typeof HTMLSelectElement.prototype.showPicker === 'function') {
       element.showPicker();
     } else {
-      element.click();
+      // Dispatch full mouse event chain for compatibility with custom component libraries
+      const rect = element.getBoundingClientRect();
+      const mouseOpts = { bubbles: true, clientX: rect.left + 1, clientY: rect.top + 1, button: 0 };
+      element.dispatchEvent(new MouseEvent('mouseenter', mouseOpts));
+      element.focus();
+      element.dispatchEvent(new MouseEvent('mousedown', mouseOpts));
+      element.dispatchEvent(new MouseEvent('mouseup', mouseOpts));
+      element.dispatchEvent(new MouseEvent('click', mouseOpts));
     }
   } catch (error) {
     return failure('ACTION_FAILED', `Click failed on: ${target}`, error);
