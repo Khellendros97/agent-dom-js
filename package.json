@@ -1,16 +1,41 @@
 {
   "name": "agent-dom-js",
-  "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
+  "description": "Browser-side DOM operation library for embedded AI assistants",
+  "license": "MIT",
   "type": "module",
   "main": "dist/agent-dom-js.umd.cjs",
   "module": "dist/agent-dom-js.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/agent-dom-js.js",
+      "require": "./dist/agent-dom-js.umd.cjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "vite build",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "pnpm build"
+  },
+  "keywords": [
+    "dom",
+    "agent",
+    "ai",
+    "automation",
+    "browser",
+    "accessibility",
+    "snapshot"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/user/agent-dom-js"
   },
   "devDependencies": {
     "@types/node": "latest",
