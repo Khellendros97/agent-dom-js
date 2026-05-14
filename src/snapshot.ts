@@ -80,7 +80,11 @@ export function createSnapshot(
     const ref = registry.register(element);
     const node = describeElement(element, ref, options.maskSensitiveValues ?? true);
     nodes.push(node);
-    lines.push(renderNode(node));
+    let line = renderNode(node);
+    if (node.role === 'combobox' && element instanceof HTMLInputElement && element.closest('.ant-select')) {
+      line += ' # click to get options';
+    }
+    lines.push(line);
 
     // Ant Design Select: render child dropdown options inline
     if (element instanceof HTMLInputElement && element.closest('.ant-select')) {
