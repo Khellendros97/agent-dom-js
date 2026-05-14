@@ -7,7 +7,10 @@ export function getRole(element: Element): string {
   const tag = element.tagName.toLowerCase();
   if (tag === 'button') return 'button';
   if (tag === 'a' && (element as HTMLAnchorElement).href) return 'link';
-  if (tag === 'select') return 'combobox';
+  if (tag === 'select') {
+    if ((element as HTMLSelectElement).multiple || Number((element as HTMLSelectElement).size) > 1) return 'listbox';
+    return 'combobox';
+  }
   if (tag === 'textarea') return 'textbox';
   if (tag === 'summary') return 'button';
 

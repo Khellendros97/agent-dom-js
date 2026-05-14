@@ -7,6 +7,20 @@ function isElementDisabled(element: HTMLElement): boolean {
   return element.getAttribute('aria-disabled') === 'true';
 }
 
+function normalizeClickTarget(element: HTMLElement): HTMLElement {
+  // Ant Design rc-select: redirect internal search input click to the selector surface
+  if (element.matches('.ant-select-selection-search-input')) {
+    const selector = element.closest('.ant-select')?.querySelector('.ant-select-selector');
+    if (selector instanceof HTMLElement) return selector;
+  }
+  // Generic: if the element is an input inside a component with role=combobox, try parent
+  if (element instanceof HTMLInputElement && element.closest('[role="combobox"]')) {
+    const wrapper = element.closest('[role="combobox"]');
+    if (wrapper instanceof HTMLElement) return wrapper;
+  }
+  return element;
+}
+
 export async function clickElement(element: Element, target: string): Promise<AgentDomResult<ActionResult>> {
   if (!(element instanceof HTMLElement)) {
     return failure('UNSUPPORTED_ELEMENT', `Target is not an HTMLElement: ${target}`);
@@ -18,20 +32,40 @@ export async function clickElement(element: Element, target: string): Promise<Ag
     return failure('DISABLED', `Target is disabled: ${target}`);
   }
   try {
-    element.scrollIntoView({ block: 'center', inline: 'center' });
+    const clickTarget = normalizeClickTarget(element);
+    clickTarget.scrollIntoView({ block: 'center', inline: 'center' });
 
-    if (element instanceof HTMLSelectElement && typeof HTMLSelectElement.prototype.showPicker === 'function') {
-      element.showPicker();
-    } else {
-      // Dispatch full mouse event chain for compatibility with custom component libraries
-      const rect = element.getBoundingClientRect();
-      const mouseOpts = { bubbles: true, clientX: rect.left + 1, clientY: rect.top + 1, button: 0 };
-      element.dispatchEvent(new MouseEvent('mouseenter', mouseOpts));
-      element.focus();
-      element.dispatchEvent(new MouseEvent('mousedown', mouseOpts));
-      element.dispatchEvent(new MouseEvent('mouseup', mouseOpts));
-      element.dispatchEvent(new MouseEvent('click', mouseOpts));
+    // Native select: use showPicker if available
+    if (element instanceof HTMLSelectElement) {
+      if (typeof HTMLSelectElement.prototype.showPicker === 'function') {
+        try {
+          element.showPicker();
+          return success({ target });
+        } catch (e) {
+          if (e instanceof DOMException && e.name === 'NotAllowedError') {
+            return failure('ACTION_FAILED', `showPicker needs user activation: ${target}`, e.message);
+          }
+        }
+      }
     }
+
+    // Pointer + mouse event chain (no duplicate click from automatic dblclick)
+    const rect = clickTarget.getBoundingClientRect();
+    const opts: PointerEventInit & MouseEventInit = {
+      bubbles: true, cancelable: true, button: 0, buttons: 1,
+      clientX: rect.left + rect.width / 2,
+      clientY: rect.top + rect.height / 2,
+      pointerId: 1, pointerType: 'mouse',
+    };
+    clickTarget.dispatchEvent(newPointerEvent('pointerover', opts));
+    clickTarget.dispatchEvent(newPointerEvent('pointerenter', opts));
+    clickTarget.dispatchEvent(newPointerEvent('pointerdown', opts));
+    clickTarget.dispatchEvent(newMouseEvent('mousedown', opts));
+    clickTarget.focus();
+    clickTarget.dispatchEvent(newPointerEvent('pointerup', opts));
+    clickTarget.dispatchEvent(newMouseEvent('mouseup', opts));
+    // Dispatch only one click — pointer click is preferred for component libraries
+    clickTarget.dispatchEvent(newPointerEvent('click', opts));
   } catch (error) {
     return failure('ACTION_FAILED', `Click failed on: ${target}`, error);
   }
@@ -138,5 +172,26 @@ function selectOption(select: HTMLSelectElement, value: string): void {
       select.value = opt.value;
       return;
     }
+  }
+}
+
+function newPointerEvent(type: string, init: PointerEventInit): Event {
+  try {
+    return new PointerEvent(type, init);
+  } catch {
+    return new MouseEvent(type, init);
+  }
+}
+
+function newMouseEvent(type: string, init: MouseEventInit): Event {
+  try {
+    return new MouseEvent(type, init);
+  } catch {
+    const event = document.createEvent('MouseEvent');
+    event.initMouseEvent(type, init.bubbles ?? false, init.cancelable ?? false, document.defaultView!, 1,
+      init.screenX ?? 0, init.screenY ?? 0, init.clientX ?? 0, init.clientY ?? 0,
+      init.ctrlKey ?? false, init.altKey ?? false, init.shiftKey ?? false, init.metaKey ?? false,
+      init.button ?? 0, null);
+    return event;
   }
 }
