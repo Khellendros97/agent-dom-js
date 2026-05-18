@@ -1,6 +1,6 @@
 {
   "name": "agent-dom-js",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Browser-side DOM operation library for embedded AI assistants",
   "license": "MIT",
   "type": "module",
