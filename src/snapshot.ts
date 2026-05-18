@@ -210,5 +210,9 @@ function safeValue(element: { value: unknown }): string {
 }
 
 function getAntdPlaceholder(element: Element): string | null {
-  return element.closest('.ant-select')?.querySelector('.ant-select-placeholder')?.textContent?.trim() ?? null;
+  const selectRoot = element.closest('.ant-select');
+  if (!selectRoot) return null;
+  return selectRoot.querySelector('.ant-select-selection-placeholder')?.textContent?.trim()
+    || selectRoot.querySelector('.ant-select-placeholder')?.textContent?.trim()
+    || null;
 }
