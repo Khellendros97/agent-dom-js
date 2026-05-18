@@ -88,7 +88,11 @@ export function createSnapshot(
 
     // Ant Design Select: render child dropdown options inline
     if (element instanceof HTMLInputElement && element.closest('.ant-select')) {
-      document.querySelectorAll('.ant-select-dropdown:not(.ant-select-dropdown-hidden) .ant-select-item-option').forEach((opt) => {
+      const listId = element.getAttribute('aria-owns');
+      const selector = listId
+        ? `#${CSS.escape(listId)} .ant-select-item-option`
+        : '.ant-select-dropdown:not(.ant-select-dropdown-hidden) .ant-select-item-option';
+      document.querySelectorAll(selector).forEach((opt) => {
         if (!isElementVisible(opt)) return;
         if (seenOptions.has(opt)) return;
         seenOptions.add(opt);
