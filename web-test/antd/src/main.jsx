@@ -129,6 +129,8 @@ function App() {
   const [searchText, setSearchText] = useState('');
   const [statusFilter, setStatusFilter] = useState(undefined);
   const [statusSelectOpen, setStatusSelectOpen] = useState(false);
+  const [roleFilter, setRoleFilter] = useState(undefined);
+  const [sourceFilter, setSourceFilter] = useState(undefined);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -164,7 +166,8 @@ function App() {
   const filtered = users.filter((u) => {
     const s = searchText.toLowerCase();
     return (!s || u.name.includes(s) || u.email.toLowerCase().includes(s) || u.role.includes(s)) &&
-      (!statusFilter || u.status === statusFilter);
+      (!statusFilter || u.status === statusFilter) &&
+      (!roleFilter || u.role === roleFilter);
   });
 
   function openAdd() {
@@ -249,7 +252,9 @@ function App() {
             </div>
             <div style={{ marginBottom: 16, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
               <Input.Search placeholder="搜索姓名、邮箱..." allowClear style={{ width: 280 }} onSearch={setSearchText} onChange={(e) => { if (!e.target.value) setSearchText(''); }} />
-              <Select open={statusSelectOpen} onOpenChange={handleStatusSelectOpenChange} placeholder="筛选状态" allowClear style={{ width: 140 }} onChange={setStatusFilter} options={Object.entries(STATUS_MAP).map(([k, v]) => ({ value: k, label: v.label }))} />
+              <Select placeholder="操作类型：全部" allowClear style={{ width: 150 }} onChange={setRoleFilter} options={ROLES.map((r) => ({ value: r, label: r }))} />
+              <Select open={statusSelectOpen} onOpenChange={handleStatusSelectOpenChange} placeholder="状态：全部" allowClear style={{ width: 140 }} onChange={setStatusFilter} options={Object.entries(STATUS_MAP).map(([k, v]) => ({ value: k, label: v.label }))} />
+              <Select placeholder="来源站点：全部" allowClear style={{ width: 160 }} onChange={setSourceFilter} options={[{ value: 'web', label: 'Web端' }, { value: 'mobile', label: '移动端' }, { value: 'api', label: 'API导入' }]} />
               <Button type="primary" icon={<span>+</span>} onClick={openAdd}>添加用户</Button>
             </div>
             <Table rowKey="id" columns={columns} dataSource={filtered} loading={loading} pagination={{ showSizeChanger: true, showTotal: (t) => `共 ${t} 条` }} />
