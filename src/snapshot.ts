@@ -86,13 +86,13 @@ export function createSnapshot(
     }
     lines.push(line);
 
-    // Ant Design Select: render child dropdown options inline
-    if (element instanceof HTMLInputElement && element.closest('.ant-select')) {
-      const listId = element.getAttribute('aria-owns');
-      const selector = listId
-        ? `#${CSS.escape(listId)} .ant-select-item-option`
-        : '.ant-select-dropdown:not(.ant-select-dropdown-hidden) .ant-select-item-option';
-      document.querySelectorAll(selector).forEach((opt) => {
+    // Ant Design Select: render child dropdown options inline (only when this combobox is open)
+    if (
+      element instanceof HTMLInputElement &&
+      element.closest('.ant-select') &&
+      element.getAttribute('aria-expanded') === 'true'
+    ) {
+      document.querySelectorAll('.ant-select-dropdown:not(.ant-select-dropdown-hidden) .ant-select-item-option').forEach((opt) => {
         if (!isElementVisible(opt)) return;
         if (seenOptions.has(opt)) return;
         seenOptions.add(opt);
