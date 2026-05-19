@@ -2,8 +2,10 @@ import { getAccessibleName, getRole, isElementVisible, isSensitiveElement } from
 import { isAllowedByPolicy } from './policy';
 import type { RefRegistry } from './ref-registry';
 import type { AgentDomOptions, SnapshotNode, SnapshotResult } from './types';
+import type { FrameworkAdapter } from './frameworks/types';
 
-const SNAPSHOT_SELECTOR = [
+/** 基础快照选择器（框架无关的核心交互元素） */
+const BASE_SELECTORS = [
   'h1', 'h2', 'h3',
   'table',
   'ul', 'ol',
@@ -16,12 +18,24 @@ const SNAPSHOT_SELECTOR = [
   '[role]',
   '[tabindex]',
   '[contenteditable="true"]',
-].join(',');
+];
+
+/** 合并基础选择器和 adapter 提供的额外选择器 */
+function getSnapshotSelector(adapters: readonly FrameworkAdapter[]): string {
+  const selectors = [...BASE_SELECTORS];
+  for (const adapter of adapters) {
+    if (adapter.snapshotSelectors) {
+      selectors.push(...adapter.snapshotSelectors);
+    }
+  }
+  return selectors.join(',');
+}
 
 export function createSnapshot(
   root: ParentNode,
   registry: RefRegistry,
   options: Pick<AgentDomOptions, 'maskSensitiveValues' | 'allowSelectors' | 'denySelectors'> = {},
+  adapters: readonly FrameworkAdapter[] = [],
 ): SnapshotResult {
   registry.clear();
 
@@ -30,7 +44,9 @@ export function createSnapshot(
   const scope = root instanceof Document ? root.body : root;
   const seenOptions = new Set<Element>();
 
-  scope.querySelectorAll(SNAPSHOT_SELECTOR).forEach((element) => {
+  const allSelectors = getSnapshotSelector(adapters);
+
+  scope.querySelectorAll(allSelectors).forEach((element) => {
     if (!isElementVisible(element)) return;
     if (!isAllowedByPolicy(element, options)) return;
 
@@ -78,41 +94,54 @@ export function createSnapshot(
 
     // Interactive element
     const ref = registry.register(element);
+
+    // Core describeElement（框架无关）
     const node = describeElement(element, ref, options.maskSensitiveValues ?? true);
+
+    // Adapter 链：描述覆盖
+    for (const adapter of adapters) {
+      const overrides = adapter.describeElement?.(element);
+      if (overrides) {
+        Object.assign(node, overrides);
+      }
+    }
+
     nodes.push(node);
     let line = renderNode(node);
-    if (node.role === 'combobox' && element instanceof HTMLInputElement && element.closest('.ant-select')) {
-      line += ' # click to get options';
+
+    // Adapter 链：hint 文本
+    for (const adapter of adapters) {
+      const hint = adapter.getElementHint?.(element);
+      if (hint) {
+        line += ` # ${hint}`;
+        break;
+      }
     }
     lines.push(line);
 
-    // Ant Design Select: render child dropdown options inline (only when this combobox is open)
-    if (
-      element instanceof HTMLInputElement &&
-      element.closest('.ant-select') &&
-      element.getAttribute('aria-expanded') === 'true'
-    ) {
-      document.querySelectorAll('.ant-select-dropdown:not(.ant-select-dropdown-hidden) .ant-select-item-option').forEach((opt) => {
-        if (!isElementVisible(opt)) return;
-        if (seenOptions.has(opt)) return;
-        seenOptions.add(opt);
-        const childRef = `${ref}-${seenOptions.size}`;
-        registry.registerChild(childRef, opt);
+    // Adapter 链：内联子节点（如下拉选项）
+    for (const adapter of adapters) {
+      const children = adapter.getInlineChildren?.(element, ref) ?? [];
+      for (const child of children) {
+        if (seenOptions.has(child.element)) continue;
+        seenOptions.add(child.element);
+        registry.registerChild(child.ref, child.element);
         const childNode: SnapshotNode = {
-          ref: childRef,
-          role: 'option',
-          name: opt.querySelector('.ant-select-item-option-content')?.textContent?.trim() || opt.getAttribute('title') || '',
-          tagName: 'div',
+          ref: child.ref,
+          role: child.role,
+          name: child.name,
+          tagName: child.tagName,
         };
         nodes.push(childNode);
         lines.push(`  ${renderNode(childNode)}`);
-      });
+      }
     }
   });
 
   return { text: lines.join('\n'), nodes };
 }
 
+/** 核心描述逻辑（框架无关） */
 function describeElement(element: Element, ref: string, maskSensitiveValues: boolean): SnapshotNode {
   const role = getRole(element);
   const name = getAccessibleName(element);
@@ -129,7 +158,7 @@ function describeElement(element: Element, ref: string, maskSensitiveValues: boo
 
   if (element instanceof HTMLInputElement) {
     node.inputType = element.type;
-    node.placeholder = element.placeholder || getAntdPlaceholder(element) || undefined;
+    node.placeholder = element.placeholder || undefined;
     node.required = element.required || undefined;
     captureValidation(element, node);
   }
@@ -143,22 +172,6 @@ function describeElement(element: Element, ref: string, maskSensitiveValues: boo
   if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
     node.value = maskSensitiveValues && isSensitiveElement(element) ? '[masked]' : safeValue(element);
     node.disabled = element.disabled;
-  }
-
-  // Ant Design Select: value is on .ant-select-content via title or textContent
-  if (element instanceof HTMLInputElement && element.closest('.ant-select')) {
-    const selectRoot = element.closest('.ant-select')!;
-    const content = selectRoot.querySelector('.ant-select-content');
-    if (content) {
-      const selected = content.getAttribute('title')?.trim() || content.textContent?.replace(element.value, '').trim() || undefined;
-      if (selected) node.value = selected;
-    }
-  }
-
-  // Ant Design dropdown option items
-  if (element.matches('.ant-select-item-option')) {
-    node.role = 'option';
-    node.name = element.querySelector('.ant-select-item-option-content')?.textContent?.trim() || element.getAttribute('title') || node.name;
   }
 
   if (element instanceof HTMLInputElement && ['checkbox', 'radio'].includes(element.type)) {
@@ -211,12 +224,4 @@ function escapeText(value: string): string {
 function safeValue(element: { value: unknown }): string {
   const v = element.value;
   return typeof v === 'string' ? v : (v != null ? String(v) : '');
-}
-
-function getAntdPlaceholder(element: Element): string | null {
-  const selectRoot = element.closest('.ant-select');
-  if (!selectRoot) return null;
-  return selectRoot.querySelector('.ant-select-selection-placeholder')?.textContent?.trim()
-    || selectRoot.querySelector('.ant-select-placeholder')?.textContent?.trim()
-    || null;
 }
