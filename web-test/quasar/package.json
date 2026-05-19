@@ -1,0 +1,21 @@
+{
+  "name": "agent-dom-quasar-test",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0"
+  },
+  "dependencies": {
+    "@quasar/extras": "latest",
+    "@vitejs/plugin-vue": "latest",
+    "quasar": "latest",
+    "vite": "latest",
+    "vue": "latest"
+  },
+  "devDependencies": {
+    "@quasar/vite-plugin": "latest"
+  }
+}

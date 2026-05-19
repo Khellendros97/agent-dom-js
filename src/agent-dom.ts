@@ -7,13 +7,13 @@ import { resolveTarget } from './target';
 import type { ActionResult, AgentDom, AgentDomOptions, AgentDomResult, SnapshotOptions, SnapshotResult, WaitOptions } from './types';
 import { waitForCondition } from './wait';
 import { antdAdapter } from './frameworks/antd';
+import { quasarAdapter } from './frameworks/quasar';
 import type { FrameworkAdapter } from './frameworks/types';
 
 /** 内置 UI 框架适配器列表 */
 const BUILTIN_ADAPTERS: readonly FrameworkAdapter[] = [
   antdAdapter,
-  // TODO: 激活 Quasar adapter — 待兼容逻辑实现后取消注释
-  // quasarAdapter,
+  quasarAdapter,
 ];
 
 export function createAgentDom(options: AgentDomOptions = {}): AgentDom {
