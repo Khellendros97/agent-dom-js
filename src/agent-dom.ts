@@ -6,6 +6,15 @@ import { createSnapshot } from './snapshot';
 import { resolveTarget } from './target';
 import type { ActionResult, AgentDom, AgentDomOptions, AgentDomResult, SnapshotOptions, SnapshotResult, WaitOptions } from './types';
 import { waitForCondition } from './wait';
+import { antdAdapter } from './frameworks/antd';
+import type { FrameworkAdapter } from './frameworks/types';
+
+/** 内置 UI 框架适配器列表 */
+const BUILTIN_ADAPTERS: readonly FrameworkAdapter[] = [
+  antdAdapter,
+  // TODO: 激活 Quasar adapter — 待兼容逻辑实现后取消注释
+  // quasarAdapter,
+];
 
 export function createAgentDom(options: AgentDomOptions = {}): AgentDom {
   const root = options.root ?? document;
@@ -17,17 +26,22 @@ export function createAgentDom(options: AgentDomOptions = {}): AgentDom {
 
   return {
     snapshot(snapOptions?: SnapshotOptions): AgentDomResult<SnapshotResult> {
-      return success(createSnapshot(snapOptions?.scope ?? root, registry, {
-        maskSensitiveValues: options.maskSensitiveValues ?? true,
-        allowSelectors: options.allowSelectors,
-        denySelectors: options.denySelectors,
-      }));
+      return success(createSnapshot(
+        snapOptions?.scope ?? root,
+        registry,
+        {
+          maskSensitiveValues: options.maskSensitiveValues ?? true,
+          allowSelectors: options.allowSelectors,
+          denySelectors: options.denySelectors,
+        },
+        BUILTIN_ADAPTERS,
+      ));
     },
 
     async click(target: string): Promise<AgentDomResult<ActionResult>> {
       if (options.readOnly) return failure('POLICY_BLOCKED', 'AgentDom is read-only');
       const resolved = resolve(target);
-      return resolved.ok ? clickElement(resolved.data, target) : resolved;
+      return resolved.ok ? clickElement(resolved.data, target, BUILTIN_ADAPTERS) : resolved;
     },
 
     async fill(target: string, value: string): Promise<AgentDomResult<ActionResult>> {

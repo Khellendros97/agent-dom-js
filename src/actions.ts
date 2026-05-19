@@ -1,19 +1,23 @@
 import { isElementVisible } from './dom-utils';
 import { failure, success } from './result';
 import type { ActionResult, AgentDomResult } from './types';
+import type { FrameworkAdapter } from './frameworks/types';
 
 function isElementDisabled(element: HTMLElement): boolean {
   if ('disabled' in element && (element as HTMLInputElement).disabled) return true;
   return element.getAttribute('aria-disabled') === 'true';
 }
 
-function normalizeClickTarget(element: HTMLElement): HTMLElement {
-  // Ant Design rc-select: redirect internal search input click to the selector surface
-  if (element.matches('.ant-select-selection-search-input')) {
-    const selector = element.closest('.ant-select')?.querySelector('.ant-select-selector');
-    if (selector instanceof HTMLElement) return selector;
+function normalizeClickTarget(
+  element: HTMLElement,
+  adapters: readonly FrameworkAdapter[],
+): HTMLElement {
+  // Adapter 链：按顺序调用，首个返回非 null 即为最终点击目标
+  for (const adapter of adapters) {
+    const result = adapter.normalizeClickTarget?.(element);
+    if (result) return result;
   }
-  // Generic: if the element is an input inside a component with role=combobox, try parent
+  // Generic fallback：如果元素是 role=combobox 内部的 input，重定向到 combobox 本身
   if (element instanceof HTMLInputElement && element.closest('[role="combobox"]')) {
     const wrapper = element.closest('[role="combobox"]');
     if (wrapper instanceof HTMLElement) return wrapper;
@@ -21,7 +25,11 @@ function normalizeClickTarget(element: HTMLElement): HTMLElement {
   return element;
 }
 
-export async function clickElement(element: Element, target: string): Promise<AgentDomResult<ActionResult>> {
+export async function clickElement(
+  element: Element,
+  target: string,
+  adapters: readonly FrameworkAdapter[] = [],
+): Promise<AgentDomResult<ActionResult>> {
   if (!(element instanceof HTMLElement)) {
     return failure('UNSUPPORTED_ELEMENT', `Target is not an HTMLElement: ${target}`);
   }
@@ -32,7 +40,7 @@ export async function clickElement(element: Element, target: string): Promise<Ag
     return failure('DISABLED', `Target is disabled: ${target}`);
   }
   try {
-    const clickTarget = normalizeClickTarget(element);
+    const clickTarget = normalizeClickTarget(element, adapters);
     clickTarget.scrollIntoView({ block: 'center', inline: 'center' });
 
     // Native select: use showPicker if available
