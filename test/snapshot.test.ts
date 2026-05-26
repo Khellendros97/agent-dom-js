@@ -105,8 +105,38 @@ describe('createSnapshot', () => {
     document.body.innerHTML = '<p>  </p><p></p>';
     const snapshot = createSnapshot(document, new RefRegistry(), {});
 
-    expect(snapshot.text).not.toContain('" "');
-    expect(snapshot.text).not.toContain('""');
+    expect(snapshot.text).toBe('');
+    expect(snapshot.nodes).toHaveLength(0);
+  });
+
+  it('treats interactive p tags as interactive nodes, not plain text', () => {
+    document.body.innerHTML = `
+      <p role="button">角色按钮段落</p>
+      <p tabindex="0">可聚焦段落</p>
+      <p contenteditable="true">可编辑段落</p>
+    `;
+    const snapshot = createSnapshot(document, new RefRegistry(), {});
+
+    // 这些 p 标签应出现在 nodes 中，而不是被 "text" 行吞掉
+    expect(snapshot.nodes).toHaveLength(3);
+    expect(snapshot.text).not.toContain('- text "角色按钮段落"');
+    expect(snapshot.text).not.toContain('- text "可聚焦段落"');
+    expect(snapshot.text).not.toContain('- text "可编辑段落"');
+    // 应包含正常的交互元素描述
+    expect(snapshot.nodes[0].role).toBe('button');
+    expect(snapshot.nodes[1].tagName).toBe('p');
+    expect(snapshot.nodes[2].tagName).toBe('p');
+  });
+
+  it('respects denySelectors for paragraph text', () => {
+    document.body.innerHTML =
+      '<p class="public">公开内容</p><p class="secret">敏感内容</p>';
+    const snapshot = createSnapshot(document, new RefRegistry(), {
+      denySelectors: ['.secret'],
+    });
+
+    expect(snapshot.text).toContain('- text "公开内容"');
+    expect(snapshot.text).not.toContain('敏感内容');
   });
 
   it('reports required attribute on fields', () => {

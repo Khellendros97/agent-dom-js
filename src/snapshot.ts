@@ -59,7 +59,14 @@ export function createSnapshot(
       return;
     }
 
-    if (tag === 'p') {
+    // 只有普通 p 标签才走纯文本输出；带 role/tabindex/contenteditable 的 p 应走交互节点逻辑
+    const isPlainParagraph =
+      tag === 'p' &&
+      !element.hasAttribute('role') &&
+      !element.hasAttribute('tabindex') &&
+      element.getAttribute('contenteditable') !== 'true';
+
+    if (isPlainParagraph) {
       const name = element.textContent?.replace(/\s+/g, ' ').trim();
       if (name) lines.push(`- text "${escapeText(name)}"`);
       return;
