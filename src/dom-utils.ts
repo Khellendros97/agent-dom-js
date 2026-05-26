@@ -54,6 +54,13 @@ export function getAccessibleName(element: Element): string {
   const value = toString((element as HTMLInputElement).value).trim();
   if (value && ['button', 'submit', 'reset'].includes((element as HTMLInputElement).type)) return value;
 
+  // <li> 元素：排除嵌套 ul/ol 文本，避免父级名称包含所有后代文本
+  if (element.tagName === 'LI') {
+    const clone = element.cloneNode(true) as HTMLElement;
+    clone.querySelectorAll('ul, ol').forEach((el) => el.remove());
+    return clone.textContent?.replace(/\s+/g, ' ').trim() ?? '';
+  }
+
   return element.textContent?.replace(/\s+/g, ' ').trim() ?? '';
 }
 

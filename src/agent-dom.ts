@@ -8,12 +8,14 @@ import type { ActionResult, AgentDom, AgentDomOptions, AgentDomResult, SnapshotO
 import { waitForCondition } from './wait';
 import { antdAdapter } from './frameworks/antd';
 import { quasarAdapter } from './frameworks/quasar';
+import { ztreeAdapter } from './frameworks/ztree';
 import type { FrameworkAdapter } from './frameworks/types';
 
 /** 内置 UI 框架适配器列表 */
 const BUILTIN_ADAPTERS: readonly FrameworkAdapter[] = [
   antdAdapter,
   quasarAdapter,
+  ztreeAdapter,
 ];
 
 export function createAgentDom(options: AgentDomOptions = {}): AgentDom {

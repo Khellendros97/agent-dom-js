@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Agent DOM - zTree nested li test</title>
+    <style>
+      :root {
+        font-family: Arial, sans-serif;
+        color: #172033;
+        background: #f5f7fb;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        display: flex;
+        min-height: 100vh;
+      }
+
+      /* ── 主内容区 ── */
+      main {
+        flex: 1;
+        min-width: 0;
+        padding: 32px;
+        display: grid;
+        gap: 24px;
+        align-content: start;
+      }
+
+      section {
+        background: #fff;
+        border: 1px solid #dfe5f2;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 10px 24px rgb(28 40 68 / 8%);
+      }
+
+      h1, h2 { margin-top: 0; }
+
+      /* ── zTree 模拟样式 ── */
+      .ztree {
+        padding: 8px 0;
+        user-select: none;
+      }
+
+      .ztree li {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        cursor: pointer;
+        outline: none;
+        position: relative;
+      }
+
+      .ztree li.treenode {
+        padding-left: 0;
+      }
+
+      .ztree li ul {
+        margin: 0;
+        padding: 0 0 0 18px;
+      }
+
+      .ztree li a {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 6px;
+        border-radius: 4px;
+        text-decoration: none;
+        color: #172033;
+        line-height: 22px;
+      }
+
+      .ztree li a:hover {
+        background: #e8f0fe;
+      }
+
+      .ztree li a.curSelectedNode {
+        background: #2458d3;
+        color: #fff;
+      }
+
+      .ztree li span.button {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        vertical-align: middle;
+        cursor: pointer;
+      }
+
+      .ztree li span.button.switch {
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M4 2l8 6-8 6z" fill="%23516070"/></svg>') center/10px no-repeat;
+      }
+
+      .ztree li span.button.noline_open {
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M4 2l8 6-8 6z" fill="%23516070"/></svg>') center/10px no-repeat;
+        transform: rotate(90deg);
+      }
+
+      .ztree li span.button.noline_close {
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M4 2l8 6-8 6z" fill="%23516070"/></svg>') center/10px no-repeat;
+      }
+
+      .ztree li span.button.noline_docu {
+        background: none;
+        width: 16px;
+      }
+
+      .selected-info {
+        min-height: 24px;
+        color: #2458d3;
+        font-weight: 700;
+        margin-top: 12px;
+        padding: 8px 12px;
+        background: #e8f0fe;
+        border-radius: 6px;
+      }
+
+      /* ── 侧边栏 ── */
+      aside {
+        width: 420px;
+        flex-shrink: 0;
+        background: #fff;
+        border-left: 1px solid #dfe5f2;
+        display: flex;
+        flex-direction: column;
+        box-shadow: -4px 0 20px rgb(28 40 68 / 6%);
+      }
+
+      .sidebar-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid #e5e9f2;
+        font-weight: 700;
+        font-size: 15px;
+        color: #2458d3;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .sidebar-header button {
+        font-size: 12px;
+        padding: 6px 10px;
+        background: #e5e9f2;
+        color: #2458d3;
+        border: 0;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+
+      .snapshot-tree {
+        flex: 1;
+        overflow: auto;
+        padding: 12px 20px;
+        font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+        font-size: 13px;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        word-break: break-all;
+        color: #1a1f2e;
+        background: #fafbff;
+        margin: 0;
+      }
+
+      .control-panel {
+        border-top: 1px solid #e5e9f2;
+        padding: 16px 20px;
+        display: grid;
+        gap: 10px;
+      }
+
+      .control-panel label {
+        font-size: 12px;
+        gap: 4px;
+        display: grid;
+        font-weight: 600;
+      }
+
+      .control-panel .row {
+        display: flex;
+        gap: 8px;
+      }
+
+      .control-panel input,
+      .control-panel select {
+        padding: 8px 10px;
+        border: 1px solid #b9c4d8;
+        border-radius: 6px;
+        font-size: 14px;
+      }
+
+      .control-panel .row input { flex: 1; }
+
+      .control-panel .exec-btn {
+        border: 0;
+        border-radius: 8px;
+        padding: 10px 14px;
+        color: #fff;
+        background: #14804a;
+        cursor: pointer;
+        width: 100%;
+      }
+
+      .control-panel .action-log {
+        font-size: 12px;
+        color: #516070;
+        min-height: 18px;
+        max-height: 80px;
+        overflow: auto;
+        background: #fafbff;
+        border-radius: 6px;
+        padding: 6px 8px;
+      }
+
+      .action-log .error { color: #d3193a; }
+      .action-log .success { color: #14804a; }
+
+      .quick-btns {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .quick-btns button {
+        font-size: 11px;
+        padding: 4px 8px;
+        border: 1px solid #b9c4d8;
+        background: #f5f7fb;
+        border-radius: 4px;
+        cursor: pointer;
+        font-family: monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Agent DOM - zTree 嵌套 li 测试</h1>
+        <p>
+          模拟 zTree 组件 DOM 结构：<code>&lt;li&gt;</code> 嵌套在 <code>&lt;div class="ztree"&gt;</code> 中，
+          每层 <code>&lt;li&gt;</code> 有 <code>tabindex="0"</code>。
+          验证 agent-dom 对嵌套列表元素的快照与点击行为。
+        </p>
+      </header>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- 问题场景：模拟真实 zTree 行为                    -->
+      <!-- ═══════════════════════════════════════════ -->
+      <section>
+        <h2>问题复现：模拟真实 zTree（仅响应 &lt;a&gt; 点击）</h2>
+        <p>
+          真实 zTree 通过 jQuery 事件委托 <strong>仅监听 <code>&lt;a&gt;</code> 元素的点击</strong>，
+          不响应 <code>&lt;li&gt;</code> 的直接点击。
+          因此 agent-dom 快照中 <code>&lt;li&gt;</code> 有 ref 但点击无效。
+        </p>
+
+        <!-- zTree 模拟 DOM（li 直接嵌套在 div.ztree 内，无外层 ul） -->
+        <div id="zTreeDemo" class="ztree">
+          <li id="ztree_1" class="level0" tabindex="0" hidefocus="true" treenode="" data-click-target="#ztree_1_a">
+            <!-- 展开/折叠按钮 -->
+            <span id="ztree_1_switch" class="button level0 switch noline_open" treenode_switch=""></span>
+            <!-- 节点链接 -->
+            <a id="ztree_1_a" class="level0" treenode_a="" title="/">
+              <span id="ztree_1_ico" class="button ico_open"></span>
+              <span id="ztree_1_span">/(ID:1)</span>
+            </a>
+            <!-- 子节点容器 -->
+            <ul id="ztree_1_ul" class="level0">
+              <li id="ztree_2" class="level1" tabindex="0" hidefocus="true" treenode="" data-click-target="#ztree_2_a">
+                <span id="ztree_2_switch" class="button level1 switch noline_docu" treenode_switch=""></span>
+                <a id="ztree_2_a" class="level1" treenode_a="" title="用户组A">
+                  <span id="ztree_2_ico" class="button ico_docu"></span>
+                  <span id="ztree_2_span">用户组A(ID:2)</span>
+                </a>
+              </li>
+              <li id="ztree_3" class="level1" tabindex="0" hidefocus="true" treenode="" data-click-target="#ztree_3_a">
+                <span id="ztree_3_switch" class="button level1 switch noline_docu" treenode_switch=""></span>
+                <a id="ztree_3_a" class="level1" treenode_a="" title="用户组B">
+                  <span id="ztree_3_ico" class="button ico_docu"></span>
+                  <span id="ztree_3_span">用户组B(ID:3)</span>
+                </a>
+              </li>
+              <li id="ztree_4" class="level1" tabindex="0" hidefocus="true" treenode="" data-click-target="#ztree_4_a">
+                <span id="ztree_4_switch" class="button level1 switch noline_open" treenode_switch=""></span>
+                <a id="ztree_4_a" class="level1" treenode_a="" title="二级组">
+                  <span id="ztree_4_ico" class="button ico_open"></span>
+                  <span id="ztree_4_span">二级组(ID:4)</span>
+                </a>
+                <ul id="ztree_4_ul" class="level1">
+                  <li id="ztree_5" class="level2" tabindex="0" hidefocus="true" treenode="" data-click-target="#ztree_5_a">
+                    <span id="ztree_5_switch" class="button level2 switch noline_docu" treenode_switch=""></span>
+                    <a id="ztree_5_a" class="level2" treenode_a="" title="子用户组C">
+                      <span id="ztree_5_ico" class="button ico_docu"></span>
+                      <span id="ztree_5_span">子用户组C(ID:5)</span>
+                    </a>
+                  </li>
+                  <li id="ztree_6" class="level2" tabindex="0" hidefocus="true" treenode="" data-click-target="#ztree_6_a">
+                    <span id="ztree_6_switch" class="button level2 switch noline_docu" treenode_switch=""></span>
+                    <a id="ztree_6_a" class="level2" treenode_a="" title="子用户组D">
+                      <span id="ztree_6_ico" class="button ico_docu"></span>
+                      <span id="ztree_6_span">子用户组D(ID:6)</span>
+                    </a>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+        </div>
+
+        <div class="selected-info" id="selected-info">尚未选择任何节点</div>
+      </section>
+
+      <section>
+        <h2>根因分析</h2>
+
+        <h3>问题 1：父级 &lt;li&gt; 名称包含所有后代文本</h3>
+        <p>
+          <code>getAccessibleName()</code> 最终回退到 <code>element.textContent</code>，
+          这会递归获取所有后代文本。父级 <code>&lt;li&gt;</code> 的 name 变成：
+        </p>
+        <pre style="background:#f5f7fb;padding:12px;border-radius:6px;overflow:auto;white-space:pre-wrap">/(ID:1) 用户组A(ID:2) 用户组B(ID:3) 二级组(ID:4) 子用户组C(ID:5) 子用户组D(ID:6)</pre>
+        <p>导致 AI 无法区分父节点名称 vs 子节点名称。</p>
+
+        <h3>问题 2：&lt;li&gt; 点击不触发 zTree 选择</h3>
+        <p>
+          快照中的 <code>&lt;li&gt;</code> 匹配 <code>[tabindex]</code> 选择器，获得 ref。
+          但 zTree 的 jQuery 事件委托<strong>仅绑定在 <code>&lt;a[treenode_a]</code></strong> 上：
+        </p>
+        <pre style="background:#f5f7fb;padding:12px;border-radius:6px;overflow:auto">// zTree 内部实现等价于
+$('.ztree').on('click', 'a[treenode_a]', function(e) {
+  // 只处理 &lt;a&gt; 上的点击
+});</pre>
+        <p>
+          当 agent-dom 点击 <code>&lt;li&gt;</code> 时，事件 <code>target</code> 是 <code>&lt;li&gt;</code>，
+          不匹配 <code>a[treenode_a]</code> 选择器，<strong>zTree 不接受此事件</strong>。
+        </p>
+        <p>右侧面板中「快速测试」按钮同时提供了 <strong>li-ref 点击</strong>（无效）和 <strong>a-selector 点击</strong>（有效），可以对比验证。</p>
+      </section>
+    </main>
+
+    <aside>
+      <div class="sidebar-header">
+        <span>DOM 快照树</span>
+        <button onclick="refreshSnapshot()">刷新</button>
+      </div>
+      <pre class="snapshot-tree" id="snapshot-tree">等待 snapshot()...</pre>
+
+      <div class="control-panel">
+        <div class="quick-btns" id="quick-btns">
+          <span style="font-size:12px;font-weight:600;align-self:center;">快速测试：</span>
+        </div>
+        <label>
+          目标 (ref 或 CSS selector)
+          <input id="ctrl-target" placeholder="@e1 或 #ztree_2" />
+        </label>
+        <div class="row">
+          <label style="flex:1">
+            操作
+            <select id="ctrl-action">
+              <option value="snapshot">snapshot</option>
+              <option value="click">click</option>
+              <option value="getText">getText</option>
+              <option value="isVisible">isVisible</option>
+              <option value="focus">focus</option>
+            </select>
+          </label>
+        </div>
+        <button class="exec-btn" onclick="executeAction()">执行</button>
+        <div class="action-log" id="action-log"></div>
+      </div>
+    </aside>
+
+    <script type="module">
+      import { createAgentDom } from '../../dist/agent-dom-js.js';
+
+      const agentDom = createAgentDom();
+
+      // ── 存储快照节点列表（用于快速按钮） ──
+      let currentNodes = [];
+
+      window.refreshSnapshot = () => {
+        const result = agentDom.snapshot();
+        const treeEl = document.getElementById('snapshot-tree');
+        if (result.ok) {
+          treeEl.textContent = result.data.text;
+          currentNodes = result.data.nodes;
+          buildQuickButtons(result.data.nodes);
+          log('snapshot 完成');
+        } else {
+          treeEl.textContent = `[snapshot failed] ${result.error}`;
+          log(result.error, 'error');
+        }
+      };
+
+      // ── 根据快照节点生成快速点击按钮 ──
+      function buildQuickButtons(nodes) {
+        const container = document.getElementById('quick-btns');
+        container.innerHTML = '<span style="font-size:12px;font-weight:600;align-self:center;">快速测试：</span>';
+
+        // 构建 li-ref → a-selector 映射
+        const aSelectorByRef = {};
+        document.querySelectorAll('.ztree li[data-click-target]').forEach((li) => {
+          // 通过 li id 匹配 node ref（需要 snapshot 先执行）
+          // 这里使用 register 的 ref 反向查找
+        });
+
+        nodes.forEach((node) => {
+          if (node.role !== 'li') return;
+
+          // 查找该 li 对应的 data-click-target
+          // 方案：遍历所有 ztree li，找到与当前 node name 匹配的
+          const ztreeLis = document.querySelectorAll('.ztree li[data-click-target]');
+          let aSelector = null;
+          for (const li of ztreeLis) {
+            // 匹配：node.name 包含 li 的直接文本（非后代合并）
+            const liSpan = li.querySelector(':scope > a > span:last-child');
+            const liText = liSpan?.textContent?.trim() || '';
+            if (liText && node.name.includes(liText)) {
+              aSelector = li.getAttribute('data-click-target');
+              break;
+            }
+          }
+
+          // —— 按钮 A：通过 ref 点击 <li>（预期失败，zTree 只监听 <a> 点击） ——
+          const liBtn = document.createElement('button');
+          liBtn.textContent = `@${node.ref}`;
+          liBtn.title = `[预期失败] 点击 <li>: ${node.name}`;
+          liBtn.style.background = '#fef2f2';
+          liBtn.style.borderColor = '#fca5a5';
+          liBtn.style.fontFamily = 'monospace';
+          liBtn.style.fontSize = '11px';
+          liBtn.addEventListener('click', async () => {
+            const result = await agentDom.click(`@${node.ref}`);
+            if (result.ok) {
+              const selText = document.getElementById('selected-info')?.textContent || '';
+              log(`[@${node.ref}] li-click → agent-dom ok, zTree: ${selText}`, selText.includes('zTree') ? 'success' : 'error');
+            } else {
+              log(`[@${node.ref}] ${result.code}: ${result.error}`, 'error');
+            }
+            setTimeout(refreshSnapshot, 100);
+          });
+          container.appendChild(liBtn);
+
+          // —— 按钮 B：通过 CSS selector 点击 <a>（预期成功） ——
+          if (aSelector) {
+            const aBtn = document.createElement('button');
+            aBtn.textContent = aSelector.includes('#ztree_') ? aSelector : 'a-sel';
+            aBtn.title = `[预期成功] 点击 ${aSelector}`;
+            aBtn.style.background = '#f0fdf4';
+            aBtn.style.borderColor = '#86efac';
+            aBtn.style.fontFamily = 'monospace';
+            aBtn.style.fontSize = '11px';
+            aBtn.addEventListener('click', async () => {
+              const result = await agentDom.click(aSelector);
+              if (result.ok) {
+                log(`[${aSelector}] a-click 成功 → ${document.getElementById('selected-info')?.textContent}`, 'success');
+              } else {
+                log(`[${aSelector}] ${result.code}: ${result.error}`, 'error');
+              }
+              setTimeout(refreshSnapshot, 100);
+            });
+            container.appendChild(aBtn);
+          }
+        });
+      }
+
+      // ── 执行动作 ──
+      window.executeAction = async () => {
+        const target = document.getElementById('ctrl-target').value.trim();
+        const action = document.getElementById('ctrl-action').value;
+
+        if (!target) {
+          log('请输入目标', 'error');
+          return;
+        }
+
+        let result;
+        switch (action) {
+          case 'snapshot':
+            refreshSnapshot();
+            return;
+          case 'click':
+            result = await agentDom.click(target);
+            break;
+          case 'getText':
+            result = agentDom.getText(target);
+            break;
+          case 'isVisible':
+            result = agentDom.isVisible(target);
+            break;
+          case 'focus':
+            result = await agentDom.focus(target);
+            break;
+          default:
+            log(`未知操作: ${action}`, 'error');
+            return;
+        }
+
+        if (result.ok) {
+          const detail = action === 'getText' ? ` → "${result.data}"` : '';
+          log(`[${action}] ${target} 执行成功${detail}`, 'success');
+        } else {
+          log(`[${action}] ${result.code}: ${result.error}`, 'error');
+        }
+
+        setTimeout(refreshSnapshot, 100);
+      };
+
+      // ── 日志 ──
+      function log(msg, type = '') {
+        const logEl = document.getElementById('action-log');
+        const span = document.createElement('span');
+        span.className = type;
+        span.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+        logEl.prepend(span);
+        logEl.appendChild(document.createElement('br'));
+        if (logEl.children.length > 24) {
+          while (logEl.children.length > 20) {
+            logEl.removeChild(logEl.lastElementChild);
+            if (logEl.lastElementChild?.tagName === 'BR') logEl.removeChild(logEl.lastElementChild);
+          }
+        }
+      }
+
+      // ── 初始快照 ──
+      refreshSnapshot();
+    </script>
+
+    <!-- ══ zTree 模拟：点击 <li> → 通过事件委托选中 <a> 并高亮 ══ -->
+    <script>
+      const zTreeContainer = document.getElementById('zTreeDemo');
+      const selectedInfo = document.getElementById('selected-info');
+
+      // ══ 真实 zTree 行为：仅响应 <a> 和 .switch 点击，不响应 <li> 点击 ══
+      zTreeContainer.addEventListener('click', function (event) {
+        const target = event.target;
+
+        // 展开/折叠按钮
+        if (target.classList.contains('switch')) {
+          const li = target.closest('li[treenode]');
+          if (!li) return;
+          const ul = li.querySelector(':scope > ul');
+          if (ul) {
+            const isOpen = ul.style.display !== 'none';
+            ul.style.display = isOpen ? 'none' : '';
+            if (isOpen) {
+              target.classList.remove('noline_open');
+              target.classList.add('noline_close');
+            } else {
+              target.classList.remove('noline_close');
+              target.classList.add('noline_open');
+            }
+          }
+          return;
+        }
+
+        // 仅响应 <a> 点击（与真实 zTree 行为一致）
+        const a = target.closest('a[treenode_a]');
+        if (!a) return;
+
+        // 选中节点
+        zTreeContainer.querySelectorAll('a.curSelectedNode').forEach((el) => el.classList.remove('curSelectedNode'));
+        a.classList.add('curSelectedNode');
+        const span = a.querySelector('span:last-child');
+        selectedInfo.textContent = 'zTree 选中：' + (span?.textContent || a.title || '未知节点');
+      });
+    </script>
+  </body>
+</html>
