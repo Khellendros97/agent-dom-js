@@ -60,11 +60,13 @@ export function createSnapshot(
     }
 
     // 只有普通 p 标签才走纯文本输出；带 role/tabindex/contenteditable 的 p 应走交互节点逻辑
+    const ce = element.getAttribute('contenteditable');
+    const isContentEditable = ce !== null && ce !== 'false';
     const isPlainParagraph =
       tag === 'p' &&
       !element.hasAttribute('role') &&
       !element.hasAttribute('tabindex') &&
-      element.getAttribute('contenteditable') !== 'true';
+      !isContentEditable;
 
     if (isPlainParagraph) {
       const name = element.textContent?.replace(/\s+/g, ' ').trim();

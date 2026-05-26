@@ -114,18 +114,31 @@ describe('createSnapshot', () => {
       <p role="button">角色按钮段落</p>
       <p tabindex="0">可聚焦段落</p>
       <p contenteditable="true">可编辑段落</p>
+      <p contenteditable>空值可编辑段落</p>
+      <p contenteditable="plaintext-only">纯文本编辑段落</p>
     `;
     const snapshot = createSnapshot(document, new RefRegistry(), {});
 
     // 这些 p 标签应出现在 nodes 中，而不是被 "text" 行吞掉
-    expect(snapshot.nodes).toHaveLength(3);
+    expect(snapshot.nodes).toHaveLength(5);
     expect(snapshot.text).not.toContain('- text "角色按钮段落"');
     expect(snapshot.text).not.toContain('- text "可聚焦段落"');
     expect(snapshot.text).not.toContain('- text "可编辑段落"');
+    expect(snapshot.text).not.toContain('- text "空值可编辑段落"');
+    expect(snapshot.text).not.toContain('- text "纯文本编辑段落"');
     // 应包含正常的交互元素描述
     expect(snapshot.nodes[0].role).toBe('button');
     expect(snapshot.nodes[1].tagName).toBe('p');
     expect(snapshot.nodes[2].tagName).toBe('p');
+  });
+
+  it('treats contenteditable=false as plain paragraph', () => {
+    document.body.innerHTML =
+      '<p contenteditable="false">不可编辑段落</p>';
+    const snapshot = createSnapshot(document, new RefRegistry(), {});
+
+    expect(snapshot.text).toContain('- text "不可编辑段落"');
+    expect(snapshot.nodes).toHaveLength(0);
   });
 
   it('respects denySelectors for paragraph text', () => {
