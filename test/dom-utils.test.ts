@@ -32,4 +32,32 @@ describe('dom utils', () => {
     password.type = 'password';
     expect(isSensitiveElement(password)).toBe(true);
   });
+
+  it('excludes nested ul/ol text from <li> accessible name', () => {
+    document.body.innerHTML = `
+      <li id="root" tabindex="0">
+        <a>/(ID:1)</a>
+        <ul>
+          <li tabindex="0"><a>用户组A(ID:2)</a></li>
+          <li tabindex="0"><a>用户组B(ID:3)</a></li>
+        </ul>
+      </li>
+    `;
+    const li = document.getElementById('root')!;
+    const name = getAccessibleName(li);
+
+    // 不应包含后代 <li> 的文本
+    expect(name).not.toContain('用户组A');
+    expect(name).not.toContain('用户组B');
+    // 应包含自身直接子元素文本
+    expect(name).toContain('/(ID:1)');
+  });
+
+  it('<li> without nested lists returns full text normally', () => {
+    document.body.innerHTML = '<li tabindex="0">普通列表项</li>';
+    const li = document.querySelector('li')!;
+    const name = getAccessibleName(li);
+
+    expect(name).toBe('普通列表项');
+  });
 });
