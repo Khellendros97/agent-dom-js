@@ -91,6 +91,24 @@ describe('createSnapshot', () => {
     expect(snapshot.nodes.some((n) => n.validationMessage)).toBe(true);
   });
 
+  it('captures paragraph text', () => {
+    document.body.innerHTML = '<p>这是一段正文内容</p><p>第二段文本</p>';
+    const snapshot = createSnapshot(document, new RefRegistry(), {});
+
+    expect(snapshot.text).toContain('- text "这是一段正文内容"');
+    expect(snapshot.text).toContain('- text "第二段文本"');
+    // p 标签不分配 ref
+    expect(snapshot.nodes).toHaveLength(0);
+  });
+
+  it('skips empty paragraphs', () => {
+    document.body.innerHTML = '<p>  </p><p></p>';
+    const snapshot = createSnapshot(document, new RefRegistry(), {});
+
+    expect(snapshot.text).not.toContain('" "');
+    expect(snapshot.text).not.toContain('""');
+  });
+
   it('reports required attribute on fields', () => {
     document.body.innerHTML = '<input type="email" required />';
     const snapshot = createSnapshot(document, new RefRegistry(), {});

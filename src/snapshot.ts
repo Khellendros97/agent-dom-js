@@ -7,6 +7,7 @@ import type { FrameworkAdapter } from './frameworks/types';
 /** 基础快照选择器（框架无关的核心交互元素） */
 const BASE_SELECTORS = [
   'h1', 'h2', 'h3',
+  'p',
   'table',
   'ul', 'ol',
   'button',
@@ -55,6 +56,12 @@ export function createSnapshot(
     if (tag === 'h1' || tag === 'h2' || tag === 'h3') {
       const name = element.textContent?.replace(/\s+/g, ' ').trim();
       if (name) lines.push(`- heading "${escapeText(name)}"`);
+      return;
+    }
+
+    if (tag === 'p') {
+      const name = element.textContent?.replace(/\s+/g, ' ').trim();
+      if (name) lines.push(`- text "${escapeText(name)}"`);
       return;
     }
 
