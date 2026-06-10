@@ -44,11 +44,15 @@ export function highlightElement(
     const doc = element.ownerDocument;
     const vw = win?.innerWidth ?? 0;
     const vh = win?.innerHeight ?? 0;
+    const clampedLeft = Math.max(0, Math.min(rect.left, vw));
+    const clampedRight = Math.max(0, Math.min(rect.right, vw));
+    const clampedTop = Math.max(0, Math.min(rect.top, vh));
+    const clampedBottom = Math.max(0, Math.min(rect.bottom, vh));
     const clampedRect = new DOMRect(
-      Math.max(0, Math.min(rect.left, vw)),
-      Math.max(0, Math.min(rect.top, vh)),
-      Math.min(rect.width, vw - Math.max(0, Math.min(rect.left, vw))),
-      Math.min(rect.height, vh - Math.max(0, Math.min(rect.top, vh))),
+      clampedLeft,
+      clampedTop,
+      Math.max(0, clampedRight - clampedLeft),
+      Math.max(0, clampedBottom - clampedTop),
     );
     const mount = doc.body ?? doc.documentElement;
     const masks = createMasks(doc, clampedRect, vw, vh, maskZIndex);
