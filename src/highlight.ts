@@ -15,7 +15,9 @@ export function highlightElement(
   element: Element,
   options: HighlightOptions = {},
 ): AgentDomResult<HighlightHandle> {
-  if (!(element instanceof HTMLElement)) {
+  const win = element.ownerDocument.defaultView;
+  const HTMLElementCtor = win?.HTMLElement ?? HTMLElement;
+  if (!(element instanceof HTMLElementCtor)) {
     return failure('UNSUPPORTED_ELEMENT', 'Target is not an HTMLElement');
   }
   if (!isElementVisible(element)) {
@@ -40,9 +42,17 @@ export function highlightElement(
     const maskZIndex = options.maskZIndex ?? DEFAULT_MASK_Z_INDEX;
     const borderZIndex = maskZIndex + 1;
     const doc = element.ownerDocument;
+    const vw = win?.innerWidth ?? 0;
+    const vh = win?.innerHeight ?? 0;
+    const clampedRect = new DOMRect(
+      Math.max(0, Math.min(rect.left, vw)),
+      Math.max(0, Math.min(rect.top, vh)),
+      Math.min(rect.width, vw - Math.max(0, Math.min(rect.left, vw))),
+      Math.min(rect.height, vh - Math.max(0, Math.min(rect.top, vh))),
+    );
     const mount = doc.body ?? doc.documentElement;
-    const masks = createMasks(doc, rect, maskZIndex);
-    const border = createBorder(doc, rect, borderZIndex);
+    const masks = createMasks(doc, clampedRect, vw, vh, maskZIndex);
+    const border = createBorder(doc, clampedRect, borderZIndex);
     const style = createStyle(doc);
 
     createdNodes.push(...masks, border, style);
@@ -64,24 +74,24 @@ export function highlightElement(
   return success({ cleanup });
 }
 
-function createMasks(doc: Document, rect: DOMRect, zIndex: number): HTMLElement[] {
+function createMasks(doc: Document, rect: DOMRect, vw: number, vh: number, zIndex: number): HTMLElement[] {
   const top = createMask(doc, zIndex, {
     top: '0px',
     left: '0px',
-    width: '100vw',
+    width: `${vw}px`,
     height: `${Math.max(0, rect.top)}px`,
   });
   const right = createMask(doc, zIndex, {
     top: `${Math.max(0, rect.top)}px`,
     left: `${Math.max(0, rect.right)}px`,
-    width: `calc(100vw - ${Math.max(0, rect.right)}px)`,
+    width: `${Math.max(0, vw - rect.right)}px`,
     height: `${Math.max(0, rect.height)}px`,
   });
   const bottom = createMask(doc, zIndex, {
     top: `${Math.max(0, rect.bottom)}px`,
     left: '0px',
-    width: '100vw',
-    height: `calc(100vh - ${Math.max(0, rect.bottom)}px)`,
+    width: `${vw}px`,
+    height: `${Math.max(0, vh - rect.bottom)}px`,
   });
   const left = createMask(doc, zIndex, {
     top: `${Math.max(0, rect.top)}px`,

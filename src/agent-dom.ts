@@ -70,7 +70,13 @@ export function createAgentDom(options: AgentDomOptions = {}): AgentDom {
       const highlighted = highlightElement(resolved.data, highlightOptions);
       if (!highlighted.ok) return highlighted;
 
-      activeHighlight = highlighted.data;
+      const originalCleanup = highlighted.data.cleanup;
+      activeHighlight = {
+        cleanup: () => {
+          originalCleanup();
+          activeHighlight = null;
+        },
+      };
       return success({ target });
     },
 

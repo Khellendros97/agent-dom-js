@@ -113,4 +113,44 @@ describe('highlightElement', () => {
       document.body.append = originalAppend;
     }
   });
+
+  it('calls scrollIntoView on the target element', () => {
+    const button = appendVisibleButton();
+    const spy = vi.spyOn(button, 'scrollIntoView');
+
+    highlightElement(button);
+
+    expect(spy).toHaveBeenCalledWith({ block: 'center', inline: 'center' });
+  });
+
+  it('positions masks around the target rectangle', () => {
+    const button = appendVisibleButton();
+
+    const result = highlightElement(button);
+    if (!result.ok) throw new Error(result.error);
+
+    const allMasks = masks();
+    // top mask: covers area above target
+    expect(allMasks[0].style.top).toBe('0px');
+    expect(allMasks[0].style.height).toBe('30px');
+    // right mask: covers area to the right of target
+    expect(allMasks[1].style.left).toBe('120px');
+    // bottom mask: covers area below target
+    expect(allMasks[2].style.top).toBe('70px');
+    // left mask: covers area to the left of target
+    expect(allMasks[3].style.left).toBe('0px');
+    expect(allMasks[3].style.width).toBe('20px');
+  });
+
+  it('cleanup is idempotent', () => {
+    const button = appendVisibleButton();
+    const result = highlightElement(button);
+    if (!result.ok) throw new Error(result.error);
+
+    result.data.cleanup();
+    result.data.cleanup();
+
+    expect(masks()).toHaveLength(0);
+    expect(border()).toBeNull();
+  });
 });
