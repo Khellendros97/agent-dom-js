@@ -49,6 +49,10 @@ export interface ActionResult {
   target: string;
 }
 
+export interface HighlightOptions {
+  maskZIndex?: number;
+}
+
 export interface WaitOptions {
   timeoutMs?: number;
   state?: 'attached' | 'visible';
@@ -60,6 +64,7 @@ export interface AgentDom {
   click(target: string): Promise<AgentDomResult<ActionResult>>;
   fill(target: string, value: string): Promise<AgentDomResult<ActionResult>>;
   focus(target: string): Promise<AgentDomResult<ActionResult>>;
+  highlight(target: string, options?: HighlightOptions): AgentDomResult<ActionResult>;
   getText(target?: string): AgentDomResult<string>;
   isVisible(target: string): AgentDomResult<boolean>;
   waitFor(target: string, options?: WaitOptions): Promise<AgentDomResult<ActionResult>>;
