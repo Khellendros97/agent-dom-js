@@ -9,7 +9,7 @@ const ctrlTarget = ref('');
 const ctrlAction = ref('click');
 const ctrlValue = ref('');
 const logs = ref([]);
-const ACTIONS = ['click', 'fill', 'focus', 'getText', 'isVisible'];
+const ACTIONS = ['click', 'fill', 'focus', 'getText', 'isVisible', 'highlight'];
 
 function now() { return new Date().toLocaleTimeString(); }
 function addLog(msg, type = '') {
@@ -32,6 +32,7 @@ async function executeAction() {
     case 'focus': result = await agentDom.focus(target); break;
     case 'getText': result = agentDom.getText(target); break;
     case 'isVisible': result = agentDom.isVisible(target); break;
+    case 'highlight': result = agentDom.highlight(target); break;
   }
   addLog(
     result.ok ? `[${ctrlAction.value}] ${target} 成功` : `[${ctrlAction.value}] ${result.code}: ${result.error}`,

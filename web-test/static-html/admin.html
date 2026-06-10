@@ -412,7 +412,7 @@
         <div class="ctrl">
           <label>目标（ref 或 CSS selector）<input id="ctrl-target" placeholder="@e1" /></label>
           <div class="row">
-            <label style="flex:1">操作 <select id="ctrl-action"><option>snapshot</option><option>click</option><option>fill</option><option>focus</option><option>getText</option><option>isVisible</option></select></label>
+            <label style="flex:1">操作 <select id="ctrl-action"><option>snapshot</option><option>click</option><option>fill</option><option>focus</option><option>getText</option><option>isVisible</option><option>highlight</option></select></label>
             <label id="ctrl-val-grp" style="display:none;flex:1">填充值 <input id="ctrl-value" placeholder="值" /></label>
           </div>
           <button class="btn exec-btn" onclick="executeAction()">执行</button>
@@ -644,6 +644,7 @@
           case 'focus': result = await agentDom.focus(target); break;
           case 'getText': result = agentDom.getText(target); break;
           case 'isVisible': result = agentDom.isVisible(target); break;
+          case 'highlight': result = agentDom.highlight(target); break;
         }
         log.innerHTML = result.ok
           ? `<span class="success">[${action}] 成功</span>`

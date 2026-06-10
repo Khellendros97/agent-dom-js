@@ -1,10 +1,11 @@
 import { clickElement, fillElement, focusElement } from './actions';
 import { isElementVisible } from './dom-utils';
+import { highlightElement, type HighlightHandle } from './highlight';
 import { RefRegistry } from './ref-registry';
 import { failure, success } from './result';
 import { createSnapshot } from './snapshot';
 import { resolveTarget } from './target';
-import type { ActionResult, AgentDom, AgentDomOptions, AgentDomResult, SnapshotOptions, SnapshotResult, WaitOptions } from './types';
+import type { ActionResult, AgentDom, AgentDomOptions, AgentDomResult, HighlightOptions, SnapshotOptions, SnapshotResult, WaitOptions } from './types';
 import { waitForCondition } from './wait';
 import { antdAdapter } from './frameworks/antd';
 import { quasarAdapter } from './frameworks/quasar';
@@ -21,6 +22,7 @@ const BUILTIN_ADAPTERS: readonly FrameworkAdapter[] = [
 export function createAgentDom(options: AgentDomOptions = {}): AgentDom {
   const root = options.root ?? document;
   const registry = new RefRegistry();
+  let activeHighlight: HighlightHandle | null = null;
 
   function resolve(target: string): AgentDomResult<Element> {
     return resolveTarget(target, root, registry, options);
@@ -56,6 +58,26 @@ export function createAgentDom(options: AgentDomOptions = {}): AgentDom {
       if (options.readOnly) return failure('POLICY_BLOCKED', 'AgentDom is read-only');
       const resolved = resolve(target);
       return resolved.ok ? focusElement(resolved.data, target) : resolved;
+    },
+
+    highlight(target: string, highlightOptions?: HighlightOptions): AgentDomResult<ActionResult> {
+      activeHighlight?.cleanup();
+      activeHighlight = null;
+
+      const resolved = resolve(target);
+      if (!resolved.ok) return resolved;
+
+      const highlighted = highlightElement(resolved.data, highlightOptions);
+      if (!highlighted.ok) return highlighted;
+
+      const originalCleanup = highlighted.data.cleanup;
+      activeHighlight = {
+        cleanup: () => {
+          originalCleanup();
+          activeHighlight = null;
+        },
+      };
+      return success({ target });
     },
 
     getText(target?: string): AgentDomResult<string> {
