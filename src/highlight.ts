@@ -139,7 +139,7 @@ function createBorder(doc: Document, rect: DOMRect, zIndex: number): HTMLElement
     boxSizing: 'border-box',
     border: '3px solid transparent',
     borderRadius: '4px',
-    animation: 'agent-dom-highlight-rgb 1.2s linear infinite',
+    animation: 'agent-dom-highlight-rgb 3s linear infinite',
     zIndex: String(zIndex),
     pointerEvents: 'none',
   });

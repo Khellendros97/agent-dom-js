@@ -283,6 +283,7 @@
               <option value="focus">focus</option>
               <option value="getText">getText</option>
               <option value="isVisible">isVisible</option>
+              <option value="highlight">highlight</option>
             </select>
           </label>
           <label id="ctrl-value-group" style="display:none;flex:1">
@@ -344,6 +345,9 @@
             break;
           case 'isVisible':
             result = agentDom.isVisible(target);
+            break;
+          case 'highlight':
+            result = agentDom.highlight(target);
             break;
           default:
             log(`未知操作: ${action}`, 'error');

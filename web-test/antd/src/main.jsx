@@ -78,6 +78,7 @@ function AgentSidebar({ agentDom, rootRef }) {
       case 'focus': r = await agentDom.focus(target); break;
       case 'getText': r = agentDom.getText(target); break;
       case 'isVisible': r = agentDom.isVisible(target); break;
+      case 'highlight': r = agentDom.highlight(target); break;
     }
     addLog(r.ok ? `[${action}] 成功` : `[${action}] ${r.code}: ${r.error}`, r.ok ? 'success' : 'error');
     setTimeout(refresh, 150);
@@ -104,7 +105,7 @@ function AgentSidebar({ agentDom, rootRef }) {
           <Input size="small" value={target} onChange={(e) => setTarget(e.target.value)} placeholder="目标 (ref 或 CSS selector)" prefix={<Text type="secondary" style={{ fontSize: 11 }}>@e1</Text>} />
           <Space.Compact block>
             <Select size="small" value={action} onChange={setAction} style={{ width: 120 }} getPopupContainer={(trigger) => trigger.parentElement || document.body}
-              options={[{ value: 'click', label: 'click' }, { value: 'fill', label: 'fill' }, { value: 'focus', label: 'focus' }, { value: 'getText', label: 'getText' }, { value: 'isVisible', label: 'isVisible' }]}
+              options={[{ value: 'click', label: 'click' }, { value: 'fill', label: 'fill' }, { value: 'focus', label: 'focus' }, { value: 'getText', label: 'getText' }, { value: 'isVisible', label: 'isVisible' }, { value: 'highlight', label: 'highlight' }]}
             />
             {action === 'fill' && (
               <Input size="small" value={value} onChange={(e) => setValue(e.target.value)} placeholder="填充值" style={{ flex: 1 }} />
